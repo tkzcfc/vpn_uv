@@ -1,0 +1,513 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="源文件">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+    <Filter Include="头文件">
+      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
+      <Extensions>h;hh;hpp;hxx;hm;inl;inc;xsd</Extensions>
+    </Filter>
+    <Filter Include="资源文件">
+      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
+      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
+    </Filter>
+    <Filter Include="common">
+      <UniqueIdentifier>{1024baa1-4a09-4d16-89db-42306ba87f78}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="common\libuv">
+      <UniqueIdentifier>{8bebca19-b20c-4b02-8f1b-99b34a88ca0e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="common\libuv\include">
+      <UniqueIdentifier>{ac68d010-be9b-45f5-802b-d82c10952c23}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="common\libuv\src">
+      <UniqueIdentifier>{fed6c0b0-47db-488c-97b4-2e3e76e7d456}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="common\libuv\src\win">
+      <UniqueIdentifier>{0c249c6f-f65c-4a59-91d3-38d550c3f256}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="common\net_uv">
+      <UniqueIdentifier>{6c90deda-2189-412e-b3de-70d6a5f46ffb}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="common\net_uv\tcp">
+      <UniqueIdentifier>{3e6ec17f-1da7-42fb-88f5-50ebb886ca95}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="common\net_uv\base">
+      <UniqueIdentifier>{3d1cb102-9be5-4332-bd20-0bab20d495df}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="common\net_uv\kcp">
+      <UniqueIdentifier>{563ab948-c603-4098-8d63-0205d1ac5c86}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="common\net_uv\common">
+      <UniqueIdentifier>{7ea4144f-140f-48f5-b81b-1a5ea4614b4f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="common\zip">
+      <UniqueIdentifier>{dcb0483d-3ee4-4cbe-968e-4d54c1c13195}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="common\zip\include">
+      <UniqueIdentifier>{3231d4aa-7749-4160-b9fc-8edc06875c59}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="common\zip\src">
+      <UniqueIdentifier>{94300f7a-32c5-4c8b-9163-828d81a8b4ed}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="main.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="..\common\libuv\src\threadpool.c">
+      <Filter>common\libuv\src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\common\libuv\src\uv-common.c">
+      <Filter>common\libuv\src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\common\libuv\src\uv-data-getter-setters.c">
+      <Filter>common\libuv\src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\common\libuv\src\version.c">
+      <Filter>common\libuv\src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\common\libuv\src\fs-poll.c">
+      <Filter>common\libuv\src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\common\libuv\src\inet.c">
+      <Filter>common\libuv\src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\common\libuv\src\win\detect-wakeup.c">
+      <Filter>common\libuv\src\win</Filter>
+    </ClCompile>
+    <ClCompile Include="..\common\libuv\src\win\dl.c">
+      <Filter>common\libuv\src\win</Filter>
+    </ClCompile>
+    <ClCompile Include="..\common\libuv\src\win\error.c">
+      <Filter>common\libuv\src\win</Filter>
+    </ClCompile>
+    <ClCompile Include="..\common\libuv\src\win\fs.c">
+      <Filter>common\libuv\src\win</Filter>
+    </ClCompile>
+    <ClCompile Include="..\common\libuv\src\win\fs-event.c">
+      <Filter>common\libuv\src\win</Filter>
+    </ClCompile>
+    <ClCompile Include="..\common\libuv\src\win\getaddrinfo.c">
+      <Filter>common\libuv\src\win</Filter>
+    </ClCompile>
+    <ClCompile Include="..\common\libuv\src\win\getnameinfo.c">
+      <Filter>common\libuv\src\win</Filter>
+    </ClCompile>
+    <ClCompile Include="..\common\libuv\src\win\handle.c">
+      <Filter>common\libuv\src\win</Filter>
+    </ClCompile>
+    <ClCompile Include="..\common\libuv\src\win\loop-watcher.c">
+      <Filter>common\libuv\src\win</Filter>
+    </ClCompile>
+    <ClCompile Include="..\common\libuv\src\win\pipe.c">
+      <Filter>common\libuv\src\win</Filter>
+    </ClCompile>
+    <ClCompile Include="..\common\libuv\src\win\poll.c">
+      <Filter>common\libuv\src\win</Filter>
+    </ClCompile>
+    <ClCompile Include="..\common\libuv\src\win\process.c">
+      <Filter>common\libuv\src\win</Filter>
+    </ClCompile>
+    <ClCompile Include="..\common\libuv\src\win\process-stdio.c">
+      <Filter>common\libuv\src\win</Filter>
+    </ClCompile>
+    <ClCompile Include="..\common\libuv\src\win\req.c">
+      <Filter>common\libuv\src\win</Filter>
+    </ClCompile>
+    <ClCompile Include="..\common\libuv\src\win\signal.c">
+      <Filter>common\libuv\src\win</Filter>
+    </ClCompile>
+    <ClCompile Include="..\common\libuv\src\win\snprintf.c">
+      <Filter>common\libuv\src\win</Filter>
+    </ClCompile>
+    <ClCompile Include="..\common\libuv\src\win\stream.c">
+      <Filter>common\libuv\src\win</Filter>
+    </ClCompile>
+    <ClCompile Include="..\common\libuv\src\win\tcp.c">
+      <Filter>common\libuv\src\win</Filter>
+    </ClCompile>
+    <ClCompile Include="..\common\libuv\src\win\thread.c">
+      <Filter>common\libuv\src\win</Filter>
+    </ClCompile>
+    <ClCompile Include="..\common\libuv\src\win\timer.c">
+      <Filter>common\libuv\src\win</Filter>
+    </ClCompile>
+    <ClCompile Include="..\common\libuv\src\win\tty.c">
+      <Filter>common\libuv\src\win</Filter>
+    </ClCompile>
+    <ClCompile Include="..\common\libuv\src\win\udp.c">
+      <Filter>common\libuv\src\win</Filter>
+    </ClCompile>
+    <ClCompile Include="..\common\libuv\src\win\util.c">
+      <Filter>common\libuv\src\win</Filter>
+    </ClCompile>
+    <ClCompile Include="..\common\libuv\src\win\winapi.c">
+      <Filter>common\libuv\src\win</Filter>
+    </ClCompile>
+    <ClCompile Include="..\common\libuv\src\win\winsock.c">
+      <Filter>common\libuv\src\win</Filter>
+    </ClCompile>
+    <ClCompile Include="..\common\libuv\src\win\async.c">
+      <Filter>common\libuv\src\win</Filter>
+    </ClCompile>
+    <ClCompile Include="..\common\libuv\src\win\core.c">
+      <Filter>common\libuv\src\win</Filter>
+    </ClCompile>
+    <ClCompile Include="..\common\net_uv\base\md5.cpp">
+      <Filter>common\net_uv\base</Filter>
+    </ClCompile>
+    <ClCompile Include="..\common\net_uv\base\Misc.cpp">
+      <Filter>common\net_uv\base</Filter>
+    </ClCompile>
+    <ClCompile Include="..\common\net_uv\base\Mutex.cpp">
+      <Filter>common\net_uv\base</Filter>
+    </ClCompile>
+    <ClCompile Include="..\common\net_uv\base\Runnable.cpp">
+      <Filter>common\net_uv\base</Filter>
+    </ClCompile>
+    <ClCompile Include="..\common\net_uv\base\Server.cpp">
+      <Filter>common\net_uv\base</Filter>
+    </ClCompile>
+    <ClCompile Include="..\common\net_uv\base\Session.cpp">
+      <Filter>common\net_uv\base</Filter>
+    </ClCompile>
+    <ClCompile Include="..\common\net_uv\base\SessionManager.cpp">
+      <Filter>common\net_uv\base</Filter>
+    </ClCompile>
+    <ClCompile Include="..\common\net_uv\base\Socket.cpp">
+      <Filter>common\net_uv\base</Filter>
+    </ClCompile>
+    <ClCompile Include="..\common\net_uv\base\Client.cpp">
+      <Filter>common\net_uv\base</Filter>
+    </ClCompile>
+    <ClCompile Include="..\common\net_uv\base\Common.cpp">
+      <Filter>common\net_uv\base</Filter>
+    </ClCompile>
+    <ClCompile Include="..\common\net_uv\kcp\KCPSocket.cpp">
+      <Filter>common\net_uv\kcp</Filter>
+    </ClCompile>
+    <ClCompile Include="..\common\net_uv\kcp\KCPSocketManager.cpp">
+      <Filter>common\net_uv\kcp</Filter>
+    </ClCompile>
+    <ClCompile Include="..\common\net_uv\kcp\KCPUtils.cpp">
+      <Filter>common\net_uv\kcp</Filter>
+    </ClCompile>
+    <ClCompile Include="..\common\net_uv\kcp\ikcp.c">
+      <Filter>common\net_uv\kcp</Filter>
+    </ClCompile>
+    <ClCompile Include="..\common\net_uv\kcp\KCPClient.cpp">
+      <Filter>common\net_uv\kcp</Filter>
+    </ClCompile>
+    <ClCompile Include="..\common\net_uv\kcp\KCPServer.cpp">
+      <Filter>common\net_uv\kcp</Filter>
+    </ClCompile>
+    <ClCompile Include="..\common\net_uv\kcp\KCPSession.cpp">
+      <Filter>common\net_uv\kcp</Filter>
+    </ClCompile>
+    <ClCompile Include="..\common\net_uv\tcp\TCPSocket.cpp">
+      <Filter>common\net_uv\tcp</Filter>
+    </ClCompile>
+    <ClCompile Include="..\common\net_uv\tcp\TCPUtils.cpp">
+      <Filter>common\net_uv\tcp</Filter>
+    </ClCompile>
+    <ClCompile Include="..\common\net_uv\tcp\TCPClient.cpp">
+      <Filter>common\net_uv\tcp</Filter>
+    </ClCompile>
+    <ClCompile Include="..\common\net_uv\tcp\TCPServer.cpp">
+      <Filter>common\net_uv\tcp</Filter>
+    </ClCompile>
+    <ClCompile Include="..\common\net_uv\tcp\TCPSession.cpp">
+      <Filter>common\net_uv\tcp</Filter>
+    </ClCompile>
+    <ClCompile Include="..\common\VPNClient.cpp">
+      <Filter>common</Filter>
+    </ClCompile>
+    <ClCompile Include="..\common\VPNPipe.cpp">
+      <Filter>common</Filter>
+    </ClCompile>
+    <ClCompile Include="..\common\VPNServer.cpp">
+      <Filter>common</Filter>
+    </ClCompile>
+    <ClCompile Include="..\common\zlib\infback.c">
+      <Filter>common\zip\src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\common\zlib\inffast.c">
+      <Filter>common\zip\src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\common\zlib\inflate.c">
+      <Filter>common\zip\src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\common\zlib\inftrees.c">
+      <Filter>common\zip\src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\common\zlib\trees.c">
+      <Filter>common\zip\src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\common\zlib\uncompr.c">
+      <Filter>common\zip\src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\common\zlib\zutil.c">
+      <Filter>common\zip\src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\common\zlib\adler32.c">
+      <Filter>common\zip\src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\common\zlib\compress.c">
+      <Filter>common\zip\src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\common\zlib\crc32.c">
+      <Filter>common\zip\src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\common\zlib\deflate.c">
+      <Filter>common\zip\src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\common\zlib\gzclose.c">
+      <Filter>common\zip\src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\common\zlib\gzlib.c">
+      <Filter>common\zip\src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\common\zlib\gzread.c">
+      <Filter>common\zip\src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\common\zlib\gzwrite.c">
+      <Filter>common\zip\src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\common\net_uv\base\DNSCache.cpp">
+      <Filter>common\net_uv\base</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\common\libuv\include\uv-darwin.h">
+      <Filter>common\libuv\include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\common\libuv\include\uv-errno.h">
+      <Filter>common\libuv\include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\common\libuv\include\uv-linux.h">
+      <Filter>common\libuv\include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\common\libuv\include\uv-os390.h">
+      <Filter>common\libuv\include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\common\libuv\include\uv-posix.h">
+      <Filter>common\libuv\include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\common\libuv\include\uv-sunos.h">
+      <Filter>common\libuv\include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\common\libuv\include\uv-threadpool.h">
+      <Filter>common\libuv\include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\common\libuv\include\uv-unix.h">
+      <Filter>common\libuv\include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\common\libuv\include\uv-version.h">
+      <Filter>common\libuv\include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\common\libuv\include\uv-win.h">
+      <Filter>common\libuv\include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\common\libuv\include\android-ifaddrs.h">
+      <Filter>common\libuv\include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\common\libuv\include\pthread-barrier.h">
+      <Filter>common\libuv\include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\common\libuv\include\stdint-msvc2008.h">
+      <Filter>common\libuv\include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\common\libuv\include\tree.h">
+      <Filter>common\libuv\include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\common\libuv\include\uv.h">
+      <Filter>common\libuv\include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\common\libuv\include\uv-aix.h">
+      <Filter>common\libuv\include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\common\libuv\include\uv-bsd.h">
+      <Filter>common\libuv\include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\common\libuv\src\queue.h">
+      <Filter>common\libuv\src</Filter>
+    </ClInclude>
+    <ClInclude Include="..\common\libuv\src\uv-common.h">
+      <Filter>common\libuv\src</Filter>
+    </ClInclude>
+    <ClInclude Include="..\common\libuv\src\heap-inl.h">
+      <Filter>common\libuv\src</Filter>
+    </ClInclude>
+    <ClInclude Include="..\common\libuv\src\win\handle-inl.h">
+      <Filter>common\libuv\src\win</Filter>
+    </ClInclude>
+    <ClInclude Include="..\common\libuv\src\win\internal.h">
+      <Filter>common\libuv\src\win</Filter>
+    </ClInclude>
+    <ClInclude Include="..\common\libuv\src\win\req-inl.h">
+      <Filter>common\libuv\src\win</Filter>
+    </ClInclude>
+    <ClInclude Include="..\common\libuv\src\win\stream-inl.h">
+      <Filter>common\libuv\src\win</Filter>
+    </ClInclude>
+    <ClInclude Include="..\common\libuv\src\win\winapi.h">
+      <Filter>common\libuv\src\win</Filter>
+    </ClInclude>
+    <ClInclude Include="..\common\libuv\src\win\winsock.h">
+      <Filter>common\libuv\src\win</Filter>
+    </ClInclude>
+    <ClInclude Include="..\common\libuv\src\win\atomicops-inl.h">
+      <Filter>common\libuv\src\win</Filter>
+    </ClInclude>
+    <ClInclude Include="..\common\net_uv\base\md5.h">
+      <Filter>common\net_uv\base</Filter>
+    </ClInclude>
+    <ClInclude Include="..\common\net_uv\base\Misc.h">
+      <Filter>common\net_uv\base</Filter>
+    </ClInclude>
+    <ClInclude Include="..\common\net_uv\base\Mutex.h">
+      <Filter>common\net_uv\base</Filter>
+    </ClInclude>
+    <ClInclude Include="..\common\net_uv\base\Runnable.h">
+      <Filter>common\net_uv\base</Filter>
+    </ClInclude>
+    <ClInclude Include="..\common\net_uv\base\Server.h">
+      <Filter>common\net_uv\base</Filter>
+    </ClInclude>
+    <ClInclude Include="..\common\net_uv\base\Session.h">
+      <Filter>common\net_uv\base</Filter>
+    </ClInclude>
+    <ClInclude Include="..\common\net_uv\base\SessionManager.h">
+      <Filter>common\net_uv\base</Filter>
+    </ClInclude>
+    <ClInclude Include="..\common\net_uv\base\Socket.h">
+      <Filter>common\net_uv\base</Filter>
+    </ClInclude>
+    <ClInclude Include="..\common\net_uv\base\Buffer.h">
+      <Filter>common\net_uv\base</Filter>
+    </ClInclude>
+    <ClInclude Include="..\common\net_uv\base\Client.h">
+      <Filter>common\net_uv\base</Filter>
+    </ClInclude>
+    <ClInclude Include="..\common\net_uv\base\Common.h">
+      <Filter>common\net_uv\base</Filter>
+    </ClInclude>
+    <ClInclude Include="..\common\net_uv\base\Config.h">
+      <Filter>common\net_uv\base</Filter>
+    </ClInclude>
+    <ClInclude Include="..\common\net_uv\base\Macros.h">
+      <Filter>common\net_uv\base</Filter>
+    </ClInclude>
+    <ClInclude Include="..\common\net_uv\common\NetUVThreadMsg.h">
+      <Filter>common\net_uv\common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\common\net_uv\common\NetHeart.h">
+      <Filter>common\net_uv\common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\common\net_uv\kcp\KCPSocket.h">
+      <Filter>common\net_uv\kcp</Filter>
+    </ClInclude>
+    <ClInclude Include="..\common\net_uv\kcp\KCPSocketManager.h">
+      <Filter>common\net_uv\kcp</Filter>
+    </ClInclude>
+    <ClInclude Include="..\common\net_uv\kcp\KCPUtils.h">
+      <Filter>common\net_uv\kcp</Filter>
+    </ClInclude>
+    <ClInclude Include="..\common\net_uv\kcp\ikcp.h">
+      <Filter>common\net_uv\kcp</Filter>
+    </ClInclude>
+    <ClInclude Include="..\common\net_uv\kcp\KCPClient.h">
+      <Filter>common\net_uv\kcp</Filter>
+    </ClInclude>
+    <ClInclude Include="..\common\net_uv\kcp\KCPCommon.h">
+      <Filter>common\net_uv\kcp</Filter>
+    </ClInclude>
+    <ClInclude Include="..\common\net_uv\kcp\KCPConfig.h">
+      <Filter>common\net_uv\kcp</Filter>
+    </ClInclude>
+    <ClInclude Include="..\common\net_uv\kcp\KCPServer.h">
+      <Filter>common\net_uv\kcp</Filter>
+    </ClInclude>
+    <ClInclude Include="..\common\net_uv\kcp\KCPSession.h">
+      <Filter>common\net_uv\kcp</Filter>
+    </ClInclude>
+    <ClInclude Include="..\common\net_uv\tcp\TCPSocket.h">
+      <Filter>common\net_uv\tcp</Filter>
+    </ClInclude>
+    <ClInclude Include="..\common\net_uv\tcp\TCPUtils.h">
+      <Filter>common\net_uv\tcp</Filter>
+    </ClInclude>
+    <ClInclude Include="..\common\net_uv\tcp\TCPClient.h">
+      <Filter>common\net_uv\tcp</Filter>
+    </ClInclude>
+    <ClInclude Include="..\common\net_uv\tcp\TCPCommon.h">
+      <Filter>common\net_uv\tcp</Filter>
+    </ClInclude>
+    <ClInclude Include="..\common\net_uv\tcp\TCPConfig.h">
+      <Filter>common\net_uv\tcp</Filter>
+    </ClInclude>
+    <ClInclude Include="..\common\net_uv\tcp\TCPServer.h">
+      <Filter>common\net_uv\tcp</Filter>
+    </ClInclude>
+    <ClInclude Include="..\common\net_uv\tcp\TCPSession.h">
+      <Filter>common\net_uv\tcp</Filter>
+    </ClInclude>
+    <ClInclude Include="..\common\net_uv\net_uv.h">
+      <Filter>common\net_uv</Filter>
+    </ClInclude>
+    <ClInclude Include="..\common\VPNClient.h">
+      <Filter>common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\common\VPNPipe.h">
+      <Filter>common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\common\VPNServer.h">
+      <Filter>common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\common\PipeMsg.h">
+      <Filter>common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\common\Socks5Msg.h">
+      <Filter>common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\common\zlib\crc32.h">
+      <Filter>common\zip\include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\common\zlib\deflate.h">
+      <Filter>common\zip\include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\common\zlib\gzguts.h">
+      <Filter>common\zip\include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\common\zlib\inffast.h">
+      <Filter>common\zip\include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\common\zlib\inffixed.h">
+      <Filter>common\zip\include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\common\zlib\inflate.h">
+      <Filter>common\zip\include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\common\zlib\inftrees.h">
+      <Filter>common\zip\include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\common\zlib\trees.h">
+      <Filter>common\zip\include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\common\zlib\zconf.h">
+      <Filter>common\zip\include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\common\zlib\zlib.h">
+      <Filter>common\zip\include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\common\zlib\zutil.h">
+      <Filter>common\zip\include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\common\net_uv\base\DNSCache.h">
+      <Filter>common\net_uv\base</Filter>
+    </ClInclude>
+  </ItemGroup>
+</Project>
