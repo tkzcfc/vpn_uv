@@ -113,7 +113,6 @@ void VPNClient::on_tcp_ServerRecvCall(Server* svr, Session* session, char* data,
 		{
 		case SessionData::Verification:
 		{
-			printf("Verification %d\n", len);
 			if (len >= 3)
 			{
 				S5Msg_C2S_Verification ver_data;
@@ -166,15 +165,7 @@ void VPNClient::on_tcp_ServerRecvCall(Server* svr, Session* session, char* data,
 		}break;
 		case SessionData::Request:
 		{
-			printf("Request %d\n", len);
 #define TWO_CHAR_TO_SHORT(A, I) A = (((uint8_t)data[I]) << 8) | ((uint8_t)data[(I + 1)])
-
-			//printf("---------------\n");
-			//for (int i = 0; i < len; ++i)
-			//{
-			//	printf("%d ", (uint8_t)data[i]);
-			//}
-			//printf("---------------\n");
 
 			// 不支持BIND请求和UDP转发
 			if (data[0] != 5 || data[1] == 2 || data[1] == 3 || data[2] != 0)
@@ -248,7 +239,6 @@ void VPNClient::on_tcp_ServerRecvCall(Server* svr, Session* session, char* data,
 		}break;
 		case SessionData::Run:
 		{
-			printf("send [%d]\n", len);
 			char* sendData = new char[sizeof(MSG_P_Base) + len];
 			((MSG_P_Base*)sendData)->sessionId = session->getSessionID();
 			((MSG_P_Base*)sendData)->msgType = PIPEMSG_TYPE::C2S_SENDDATA;
@@ -282,7 +272,6 @@ void VPNClient::on_pipeRecvCallback(char* data, uint32_t len)
 	{
 	case S2C_REQUEST:
 	{
-		//printf("S2C_REQUEST\n");
 		MSG_P_S2C_Request* requestData = (MSG_P_S2C_Request*)data;
 		auto it = m_sessionDataMap.find(msg->sessionId);
 		if (m_sessionDataMap.end() != it && it->second.status == SessionData::WaitRequest)
@@ -293,22 +282,6 @@ void VPNClient::on_pipeRecvCallback(char* data, uint32_t len)
 				if (it->second.request.CMD == 0x01)//tcp
 				{
 					static char buf[] = { 0x05, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
-					////
-					//static char szbuf[512];
-					//memcpy(szbuf, buf, sizeof(buf));
-
-					//// domain name
-					//if (it->second.request.ATYP == 0x03)
-					//{
-					//}
-					////ipv6
-					//else if (it->second.request.ATYP == 0x04)
-					//{
-					//}
-					//// ATYP == 0x01 ipv4
-					//else
-					//{
-					//}
 					m_tcpSvr->send(it->first, buf, sizeof(buf));
 				}
 			}
@@ -322,12 +295,10 @@ void VPNClient::on_pipeRecvCallback(char* data, uint32_t len)
 	}break;
 	case S2C_DISCONNECT:
 	{
-		//printf("S2C_DISCONNECT\n");
 		m_tcpSvr->disconnect(msg->sessionId);
 	}break;
 	case S2C_SENDDATA:
 	{
-		printf("recv [%d]\n", len - sizeof(MSG_P_Base));
 		m_tcpSvr->send(msg->sessionId, data + sizeof(MSG_P_Base), len - sizeof(MSG_P_Base));
 	}break;
 	default:

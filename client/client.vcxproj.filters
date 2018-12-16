@@ -5,10 +5,6 @@
       <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
       <Extensions>cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
     </Filter>
-    <Filter Include="头文件">
-      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
-      <Extensions>h;hh;hpp;hxx;hm;inl;inc;xsd</Extensions>
-    </Filter>
     <Filter Include="资源文件">
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
@@ -43,14 +39,8 @@
     <Filter Include="common\libuv\src\win">
       <UniqueIdentifier>{d3a02927-8658-4fb5-89b0-51846bd65a4a}</UniqueIdentifier>
     </Filter>
-    <Filter Include="common\zlib">
-      <UniqueIdentifier>{5ccda8ab-df5d-4940-a28f-cbaff989fc59}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="common\zlib\include">
-      <UniqueIdentifier>{b6a04b98-6c10-4fe8-a60f-54a3eca27c65}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="common\zlib\src">
-      <UniqueIdentifier>{07c126f2-ff31-4bd6-b006-0fcc7fcf3202}</UniqueIdentifier>
+    <Filter Include="common\snappy">
+      <UniqueIdentifier>{d048c7b1-c2bf-4c06-8972-214afff63f4b}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -234,53 +224,23 @@
     <ClCompile Include="main.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="..\common\zlib\gzlib.c">
-      <Filter>common\zlib\src</Filter>
-    </ClCompile>
-    <ClCompile Include="..\common\zlib\gzread.c">
-      <Filter>common\zlib\src</Filter>
-    </ClCompile>
-    <ClCompile Include="..\common\zlib\gzwrite.c">
-      <Filter>common\zlib\src</Filter>
-    </ClCompile>
-    <ClCompile Include="..\common\zlib\infback.c">
-      <Filter>common\zlib\src</Filter>
-    </ClCompile>
-    <ClCompile Include="..\common\zlib\inffast.c">
-      <Filter>common\zlib\src</Filter>
-    </ClCompile>
-    <ClCompile Include="..\common\zlib\inflate.c">
-      <Filter>common\zlib\src</Filter>
-    </ClCompile>
-    <ClCompile Include="..\common\zlib\inftrees.c">
-      <Filter>common\zlib\src</Filter>
-    </ClCompile>
-    <ClCompile Include="..\common\zlib\trees.c">
-      <Filter>common\zlib\src</Filter>
-    </ClCompile>
-    <ClCompile Include="..\common\zlib\uncompr.c">
-      <Filter>common\zlib\src</Filter>
-    </ClCompile>
-    <ClCompile Include="..\common\zlib\zutil.c">
-      <Filter>common\zlib\src</Filter>
-    </ClCompile>
-    <ClCompile Include="..\common\zlib\adler32.c">
-      <Filter>common\zlib\src</Filter>
-    </ClCompile>
-    <ClCompile Include="..\common\zlib\compress.c">
-      <Filter>common\zlib\src</Filter>
-    </ClCompile>
-    <ClCompile Include="..\common\zlib\crc32.c">
-      <Filter>common\zlib\src</Filter>
-    </ClCompile>
-    <ClCompile Include="..\common\zlib\deflate.c">
-      <Filter>common\zlib\src</Filter>
-    </ClCompile>
-    <ClCompile Include="..\common\zlib\gzclose.c">
-      <Filter>common\zlib\src</Filter>
-    </ClCompile>
     <ClCompile Include="..\common\net_uv\base\DNSCache.cpp">
       <Filter>common\net_uv\base</Filter>
+    </ClCompile>
+    <ClCompile Include="..\common\rc4.c">
+      <Filter>common</Filter>
+    </ClCompile>
+    <ClCompile Include="..\common\snappy\snappy-sinksource.cc">
+      <Filter>common\snappy</Filter>
+    </ClCompile>
+    <ClCompile Include="..\common\snappy\snappy-stubs-internal.cc">
+      <Filter>common\snappy</Filter>
+    </ClCompile>
+    <ClCompile Include="..\common\snappy\snappy.cc">
+      <Filter>common\snappy</Filter>
+    </ClCompile>
+    <ClCompile Include="..\common\snappy\snappy-c.cc">
+      <Filter>common\snappy</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -470,41 +430,26 @@
     <ClInclude Include="..\common\VPNServer.h">
       <Filter>common</Filter>
     </ClInclude>
-    <ClInclude Include="..\common\zlib\crc32.h">
-      <Filter>common\zlib\include</Filter>
-    </ClInclude>
-    <ClInclude Include="..\common\zlib\deflate.h">
-      <Filter>common\zlib\include</Filter>
-    </ClInclude>
-    <ClInclude Include="..\common\zlib\gzguts.h">
-      <Filter>common\zlib\include</Filter>
-    </ClInclude>
-    <ClInclude Include="..\common\zlib\inffast.h">
-      <Filter>common\zlib\include</Filter>
-    </ClInclude>
-    <ClInclude Include="..\common\zlib\inffixed.h">
-      <Filter>common\zlib\include</Filter>
-    </ClInclude>
-    <ClInclude Include="..\common\zlib\inflate.h">
-      <Filter>common\zlib\include</Filter>
-    </ClInclude>
-    <ClInclude Include="..\common\zlib\inftrees.h">
-      <Filter>common\zlib\include</Filter>
-    </ClInclude>
-    <ClInclude Include="..\common\zlib\trees.h">
-      <Filter>common\zlib\include</Filter>
-    </ClInclude>
-    <ClInclude Include="..\common\zlib\zconf.h">
-      <Filter>common\zlib\include</Filter>
-    </ClInclude>
-    <ClInclude Include="..\common\zlib\zlib.h">
-      <Filter>common\zlib\include</Filter>
-    </ClInclude>
-    <ClInclude Include="..\common\zlib\zutil.h">
-      <Filter>common\zlib\include</Filter>
-    </ClInclude>
     <ClInclude Include="..\common\net_uv\base\DNSCache.h">
       <Filter>common\net_uv\base</Filter>
+    </ClInclude>
+    <ClInclude Include="..\common\rc4.h">
+      <Filter>common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\common\snappy\snappy-sinksource.h">
+      <Filter>common\snappy</Filter>
+    </ClInclude>
+    <ClInclude Include="..\common\snappy\snappy-stubs-internal.h">
+      <Filter>common\snappy</Filter>
+    </ClInclude>
+    <ClInclude Include="..\common\snappy\snappy.h">
+      <Filter>common\snappy</Filter>
+    </ClInclude>
+    <ClInclude Include="..\common\snappy\snappy-c.h">
+      <Filter>common\snappy</Filter>
+    </ClInclude>
+    <ClInclude Include="..\common\snappy\snappy-internal.h">
+      <Filter>common\snappy</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

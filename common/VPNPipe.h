@@ -5,17 +5,35 @@
 #include <functional>
 #include "PipeMsg.h"
 #include <unordered_map>
+#include <chrono>
+
 
 NS_NET_UV_OPEN;
 
-typedef KCPClient PipeClient;
-typedef KCPServer PipeServer;
+// 最大会话数量
+#define VPN_PIPE_MAX_SESSION_COUNT (15)
 
-#define VPN_PIPE_MAX_SESSION_COUNT (10)
+#define USE_SNAPPY 1
+
+
+#if USE_SNAPPY 
+#include "snappy/snappy.h"
+#else
+extern"C"
+{
+#include "rc4.h"
+}
+const unsigned char rc4_key[] = "vpn_nv";
+const uint32_t rc4_key_len = sizeof(rc4_key);
+#endif
+
 
 typedef std::function<void(char*, uint32_t)> pipeRecvCallback;
 typedef std::function<void()> pipeCloseCallback;
 typedef std::function<void(bool)> pipeReadyCallback;
+
+typedef KCPClient PipeClient;
+typedef KCPServer PipeServer;
 
 class VPNPipe
 {
@@ -68,6 +86,10 @@ protected:
 
 protected:
 
+	void addConnect();
+
+	void onRecvData(Session*session, char* data, uint32_t len);
+
 	uint32_t getWriteSessionID();
 
 protected:
@@ -88,13 +110,18 @@ protected:
 	std::unordered_map<uint32_t, uint32_t> m_sessionIDMap;
 
 	uint32_t m_uniqueID;
+
 	std::string m_ip;
 	uint32_t m_port;
-
 	bool m_isStart;
 
-	unsigned char* m_bufferRes;
-	unsigned char* m_bufferDes;
+#if USE_SNAPPY 
+#else
+	unsigned char* m_buffer;
+	struct rc4_state m_state;
+#endif
+	std::chrono::time_point<std::chrono::high_resolution_clock> m_lastTime;
+	uint32_t m_transmittedSize;
 };
 
 

@@ -1,5 +1,4 @@
 #include "VPNPipe.h"
-#include <zlib/zlib.h>
 
 VPNPipe::VPNPipe(TYPE type)
 	: m_pipeRecvCall(nullptr)
@@ -10,9 +9,12 @@ VPNPipe::VPNPipe(TYPE type)
 	, m_ip("")
 	, m_port(0)
 	, m_uniqueID(0)
+	, m_transmittedSize(0)
 {
-	m_bufferRes = new unsigned char[1024 * 1024];
-	m_bufferDes = new unsigned char[1024 * 1024];
+#if USE_SNAPPY 
+#else
+	m_buffer = new unsigned char[1024 * 1024];
+#endif
 	m_type = type;
 	if (type == TYPE::SERVER)
 	{
@@ -32,12 +34,15 @@ VPNPipe::VPNPipe(TYPE type)
 		m_client->setRemoveSessionCallback(std::bind(&VPNPipe::on_ClientRemoveSessionCall, this, std::placeholders::_1, std::placeholders::_2));
 		m_client->setAutoReconnect(true);
 	}
+	m_lastTime = std::chrono::high_resolution_clock::now();
 }
 
 VPNPipe::~VPNPipe()
 {
-	delete[]m_bufferRes;
-	delete[]m_bufferDes;
+#if USE_SNAPPY 
+#else
+	delete[]m_buffer;
+#endif
 }
 
 bool VPNPipe::start(const char* ip, uint32_t port)
@@ -55,10 +60,7 @@ bool VPNPipe::start(const char* ip, uint32_t port)
 	}
 	if (m_client)
 	{
-		for (int32_t i = 0; i < 2; ++i)
-		{
-			m_client->connect(ip, port, m_uniqueID++);
-		}
+		addConnect();
 		m_isStart = true;
 	}
 	return m_isStart;
@@ -97,24 +99,70 @@ void VPNPipe::send(char* data, uint32_t len)
 		m_sessionIDMap.erase(msg->sessionId);
 	}
 
-	memcpy(m_bufferRes, data, len);
-
-	uLongf desLen;
-	int nError = compress(m_bufferDes, &desLen, m_bufferRes, len);
-	if (nError != Z_OK)
+#if USE_SNAPPY
+	snappy::string out;
+	if (!snappy::Compress(data, len, &out))
 	{
-		printf("compress error\n");
+		printf("snappy::Compress Error\n");
 		return;
 	}
-	//printf("___send %d\n", desLen);
+
 	if (m_type == TYPE::SERVER)
 	{
-		m_svr->send(m_sessionIDMap[msg->sessionId], (char*)m_bufferDes, desLen);
+		m_svr->send(sessionID, (char*)out.c_str(), out.size());
 	}
 	else
 	{
-		m_client->send(m_sessionIDMap[msg->sessionId], (char*)m_bufferDes, desLen);
+		m_client->send(sessionID, (char*)out.c_str(), out.size());
 	}
+#else
+	rc4_init(&m_state, rc4_key, rc4_key_len);
+	rc4_crypt(&m_state, (unsigned char*)data, m_buffer, len);
+	if (m_type == TYPE::SERVER)
+	{
+		m_svr->send(sessionID, (char*)m_buffer, len);
+	}
+	else
+	{
+		m_client->send(sessionID, (char*)m_buffer, len);
+	}
+#endif
+}
+
+void VPNPipe::onRecvData(Session*session, char* data, uint32_t len)
+{
+#if USE_SNAPPY
+	snappy::string out;
+	if (!snappy::Uncompress(data, len, &out))
+	{
+		printf("snappy::Uncompress error\n");
+		return;
+	}
+	m_transmittedSize += out.size();
+
+	MSG_P_Base* msg = (MSG_P_Base*)out.c_str();
+	m_sessionIDMap[msg->sessionId] = session->getSessionID();
+
+	if (msg->msgType == PIPEMSG_TYPE::C2S_DISCONNECT || msg->msgType == PIPEMSG_TYPE::S2C_DISCONNECT)
+	{
+		m_sessionIDMap.erase(msg->sessionId);
+	}
+	m_pipeRecvCall((char*)out.c_str(), out.size());
+#else
+	rc4_init(&m_state, rc4_key, rc4_key_len);
+	rc4_crypt(&m_state, (unsigned char*)data, m_buffer, len);
+
+	m_transmittedSize += len;
+
+	MSG_P_Base* msg = (MSG_P_Base*)m_buffer;
+	m_sessionIDMap[msg->sessionId] = session->getSessionID();
+
+	if (msg->msgType == PIPEMSG_TYPE::C2S_DISCONNECT || msg->msgType == PIPEMSG_TYPE::S2C_DISCONNECT)
+	{
+		m_sessionIDMap.erase(msg->sessionId);
+	}
+	m_pipeRecvCall((char*)m_buffer, len);
+#endif
 }
 
 void VPNPipe::updateFrame()
@@ -126,6 +174,18 @@ void VPNPipe::updateFrame()
 	if (m_svr != NULL)
 	{
 		m_svr->updateFrame();
+	}
+	std::chrono::time_point<std::chrono::high_resolution_clock> curTime = std::chrono::high_resolution_clock::now();
+	int64_t milliseconds = std::chrono::duration_cast<std::chrono::milliseconds>(curTime - m_lastTime).count();
+	if (milliseconds > 1000)
+	{
+		float speed = (float)m_transmittedSize / 1024.0f;
+		if (speed > 0.0f)
+		{
+			printf("%fkb/s\n", speed);
+		}
+		m_transmittedSize = 0;
+		m_lastTime = curTime;
 	}
 }
 
@@ -150,43 +210,31 @@ void VPNPipe::on_ServerNewConnectCall(Server* svr, Session* session)
 
 void VPNPipe::on_ServerRecvCall(Server* svr, Session* session, char* data, uint32_t len)
 {
-	//printf("___recv %d\n", len);
-	memcpy(m_bufferDes, data, len);
-
-	uLongf unSize;
-	int nError = uncompress(m_bufferRes, &unSize, m_bufferDes, len);
-	if (nError != Z_OK)
-	{
-		printf("uncompress error\n");
-		return;
-	}
-
-	MSG_P_Base* msg = (MSG_P_Base*)m_bufferRes;
-	m_sessionIDMap[msg->sessionId] = session->getSessionID();
-
-	if (msg->msgType == PIPEMSG_TYPE::C2S_DISCONNECT || msg->msgType == PIPEMSG_TYPE::S2C_DISCONNECT)
-	{
-		m_sessionIDMap.erase(msg->sessionId);
-	}
-	m_pipeRecvCall((char*)m_bufferRes, unSize);
+	onRecvData(session, data, len);
 }
 
 void VPNPipe::on_ServerDisconnectCall(Server* svr, Session* session)
 {
 	m_connectSessionIDArr.erase(std::find(m_connectSessionIDArr.begin(), m_connectSessionIDArr.end(), session->getSessionID()));
 
-	for (auto &it : m_sessionIDMap)
+	for (auto it = m_sessionIDMap.begin(); it != m_sessionIDMap.end();)
 	{
-		if (it.second == session->getSessionID())
+		if (it->second == session->getSessionID())
 		{
 			MSG_P_Base msg;
-			msg.sessionId = it.first;
+			msg.sessionId = it->first;
 			msg.msgType = PIPEMSG_TYPE::C2S_DISCONNECT;
+
+			it = m_sessionIDMap.erase(it);
+
 			m_pipeRecvCall((char*)&msg, sizeof(MSG_P_Base));
-			m_sessionIDMap.erase(it.first);
-			break;
+		}
+		else
+		{
+			++it;
 		}
 	}
+
 	printf("svr pipe disconnect %d %d\n", session->getSessionID(), m_connectSessionIDArr.size());
 }
 
@@ -229,40 +277,29 @@ void VPNPipe::on_ClientDisconnectCall(Client* client, Session* session)
 		}
 	}
 
-	for (auto &it : m_sessionIDMap)
+	for (auto it = m_sessionIDMap.begin(); it != m_sessionIDMap.end(); )
 	{
-		if (it.second == session->getSessionID())
+		if (it->second == session->getSessionID())
 		{
 			MSG_P_Base msg;
-			msg.sessionId = it.first;
+			msg.sessionId = it->first;
 			msg.msgType = PIPEMSG_TYPE::S2C_DISCONNECT;
+			it = m_sessionIDMap.erase(it);
+
 			m_pipeRecvCall((char*)&msg, sizeof(MSG_P_Base));
-			m_sessionIDMap.erase(it.first);
-			break;
+		}
+		else
+		{
+			++it;
 		}
 	}
+
 	printf("cli pipe session[%d], disconnect %d\n", session->getSessionID(), m_connectSessionIDArr.size());
 }
 
 void VPNPipe::on_ClientRecvCall(Client* client, Session* session, char* data, uint32_t len)
 {
-	//printf("___recv %d\n", len);
-	memcpy(m_bufferDes, data, len);
-
-	uLongf unSize;
-	int nError = uncompress(m_bufferRes, &unSize, m_bufferDes, len);
-	if (nError != Z_OK)
-	{
-		printf("uncompress error\n");
-		return;
-	}
-
-	MSG_P_Base* msg = (MSG_P_Base*)m_bufferRes;
-	if (msg->msgType == PIPEMSG_TYPE::C2S_DISCONNECT || msg->msgType == PIPEMSG_TYPE::S2C_DISCONNECT)
-	{
-		m_sessionIDMap.erase(msg->sessionId);
-	}
-	m_pipeRecvCall((char*)m_bufferRes, unSize);
+	onRecvData(session, data, len);
 }
 
 void VPNPipe::on_ClientCloseCall(Client* client)
@@ -276,6 +313,14 @@ void VPNPipe::on_ClientCloseCall(Client* client)
 
 void VPNPipe::on_ClientRemoveSessionCall(Client* client, Session* session)
 {}
+
+void VPNPipe::addConnect()
+{
+	if (m_type == TYPE::CLIENT && m_uniqueID < VPN_PIPE_MAX_SESSION_COUNT)
+	{
+		m_client->connect(m_ip.c_str(), m_port, m_uniqueID++);
+	}
+}
 
 uint32_t VPNPipe::getWriteSessionID()
 {
@@ -307,10 +352,9 @@ uint32_t VPNPipe::getWriteSessionID()
 		}
 	}
 
-	if (m_type == TYPE::CLIENT && minCount > 0 && m_uniqueID < VPN_PIPE_MAX_SESSION_COUNT)
+	if (m_type == TYPE::CLIENT && minCount > 0)
 	{
-		m_client->connect(m_ip.c_str(), m_port, m_uniqueID++);
-		printf("\n\nm_uniqueID = %d\n\n", m_uniqueID);
+		addConnect();
 	}
 
 	return minSessionID;

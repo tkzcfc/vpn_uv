@@ -546,6 +546,7 @@ void KCPSocket::initKcp(IUINT32 conv)
 	}
 	m_kcp = ikcp_create(conv, this);
 	m_kcp->output = &KCPSocket::udp_output;
+	m_kcp->stream = 1;
 
 	ikcp_wndsize(m_kcp, 128, 128);
 

@@ -101,7 +101,6 @@ void VPNServer::on_ClientConnectCall(Client* client, Session* session, int32_t s
 
 void VPNServer::on_ClientDisconnectCall(Client* client, Session* session)
 {
-	//printf("disconnect to %s\n", session->getIp().c_str());
 	client->removeSession(session->getSessionID());
 }
 
@@ -110,8 +109,6 @@ void VPNServer::on_ClientRecvCall(Client* client, Session* session, char* data, 
 	auto it = m_sessionIDMap.find(session->getSessionID());
 	if (it != m_sessionIDMap.end())
 	{
-		printf("send [%d]\n", len);
-
 		char* sendData = new char[sizeof(MSG_P_Base) + len];
 		((MSG_P_Base*)sendData)->sessionId = it->second;
 		((MSG_P_Base*)sendData)->msgType = PIPEMSG_TYPE::S2C_SENDDATA;
@@ -143,7 +140,6 @@ void VPNServer::on_pipeRecvCallback(char* data, uint32_t len)
 	{
 	case PIPEMSG_TYPE::C2S_REQUEST:
 	{
-		//printf("pipe C2S_REQUEST\n");
 		MSG_P_C2S_Request* reqMsg = (MSG_P_C2S_Request*)data;
 		m_client->connect(reqMsg->szIP, reqMsg->port, m_clientUniqueSessionID);
 		m_sessionIDMap[m_clientUniqueSessionID] = msg->sessionId;
@@ -151,9 +147,6 @@ void VPNServer::on_pipeRecvCallback(char* data, uint32_t len)
 	}break;
 	case PIPEMSG_TYPE::C2S_SENDDATA:
 	{
-		//printf("pipe C2S_SENDDATA\n");
-		printf("recv [%d]\n", len - sizeof(MSG_P_Base));
-
 		for (auto &it : m_sessionIDMap)
 		{
 			if (it.second == msg->sessionId)
@@ -165,7 +158,6 @@ void VPNServer::on_pipeRecvCallback(char* data, uint32_t len)
 	}break;
 	case PIPEMSG_TYPE::C2S_DISCONNECT:
 	{
-		//printf("pipe C2S_DISCONNECT\n");
 		for (auto &it : m_sessionIDMap)
 		{
 			if (it.second == msg->sessionId)
