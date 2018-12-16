@@ -5,7 +5,7 @@ NS_NET_UV_BEGIN
 
 // º”√‹Key
 const char* tcp_uv_encodeKey = TCP_UV_ENCODE_KEY;
-const int32_t tcp_uv_encodeKeyLen = strlen(tcp_uv_encodeKey);
+const uint32_t tcp_uv_encodeKeyLen = (uint32_t)strlen(tcp_uv_encodeKey);
 
 const static uint32_t tcp_uv_hashlen = sizeof(unsigned int);
 
@@ -58,8 +58,8 @@ char* tcp_uv_decode(const char* data, uint32_t len, uint32_t &outLen)
 
 	auto md5s = M.toString();
 
-	auto hashvalue = net_getBufHash(md5s.c_str(), md5s.size());
-	if (hashvalue == *(size_t*)(data))
+	uint32_t hashvalue = net_getBufHash(md5s.c_str(), (uint32_t)md5s.size());
+	if (hashvalue == *(uint32_t*)(data))
 	{
 		outLen = datalen;
 	}
