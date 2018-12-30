@@ -261,6 +261,8 @@ void VPNClient::on_tcp_ServerDisconnectCall(Server* svr, Session* session)
 	data.sessionId = session->getSessionID();
 	m_pipe->send((char*)&data, sizeof(data));
 
+	printf("disconnect session%d\n", session->getSessionID());
+
 	m_sessionDataMap.erase(session->getSessionID());
 }
 

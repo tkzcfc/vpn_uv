@@ -162,6 +162,7 @@ void VPNServer::on_pipeRecvCallback(char* data, uint32_t len)
 		{
 			if (it.second == msg->sessionId)
 			{
+				printf("disconnect session%d\n", msg->sessionId);
 				m_client->disconnect(it.first);
 				break;
 			}

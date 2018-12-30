@@ -11,7 +11,10 @@
 NS_NET_UV_OPEN;
 
 // 最大会话数量
-#define VPN_PIPE_MAX_SESSION_COUNT (15)
+#define VPN_PIPE_MAX_SESSION_COUNT (50)
+// 预分配回话数量
+#define VPN_PIPE_PRE_SESSION_COUNT (8)
+
 
 #define USE_SNAPPY 1
 
@@ -90,7 +93,19 @@ protected:
 
 	void onRecvData(Session*session, char* data, uint32_t len);
 
+	void disconnectSession(uint32_t sessionID);
+
 	uint32_t getWriteSessionID();
+
+	uint32_t getFreeSessionCount();
+
+	uint32_t getSessionRefCount(uint32_t sessionID);
+
+	void eraseConnect(uint32_t msgSessionID);
+
+	void tryDisconnectSession(uint32_t sessionID);
+
+	void checkInvalidSession();
 
 protected:
 
@@ -110,6 +125,9 @@ protected:
 	std::unordered_map<uint32_t, uint32_t> m_sessionIDMap;
 
 	uint32_t m_uniqueID;
+	uint32_t m_sessionCount;
+
+	uint32_t m_checkTime;
 
 	std::string m_ip;
 	uint32_t m_port;
