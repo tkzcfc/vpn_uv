@@ -473,8 +473,6 @@ void KCPServer::onIdleRun()
 	default:
 		break;
 	}
-
-	ThreadSleep(1);
 }
 
 void KCPServer::onSessionUpdateRun()

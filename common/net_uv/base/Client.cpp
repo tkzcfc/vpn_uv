@@ -11,6 +11,9 @@ Client::Client()
 	memset(&m_idle, 0, sizeof(uv_idle_t));
 	memset(&m_sessionUpdateTimer, 0, sizeof(uv_timer_t));
 	memset(&m_loop, 0, sizeof(uv_loop_t));
+
+	m__now_clock = std::chrono::steady_clock::now();
+	m__last_clock = std::chrono::steady_clock::now();
 }
 
 Client::~Client()
@@ -74,8 +77,20 @@ void Client::stopSessionUpdate()
 
 void Client::uv_on_idle_run(uv_idle_t* handle)
 {
-	Client* svr = (Client*)handle->data;
-	svr->onIdleRun();
+	Client* client = (Client*)handle->data;
+
+	client->m__now_clock = std::chrono::steady_clock::now();
+	int64_t microseconds = std::chrono::duration_cast<std::chrono::milliseconds>(client->m__now_clock - client->m__last_clock).count();
+	/// fps:60
+	if (microseconds > 16)
+	{
+		client->m__last_clock = client->m__now_clock;
+		ThreadSleep(1);
+	}
+	else
+	{
+		client->onIdleRun();
+	}
 }
 
 void Client::uv_on_session_update_timer_run(uv_timer_t* handle)
