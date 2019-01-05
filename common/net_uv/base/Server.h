@@ -4,7 +4,6 @@
 #include "Session.h"
 #include "SessionManager.h"
 #include "Runnable.h"
-#include <chrono>
 #include "../common/NetUVThreadMsg.h"
 
 NS_NET_UV_BEGIN
@@ -102,9 +101,6 @@ protected:
 
 	// 服务器所处阶段
 	ServerStage m_serverStage;
-
-	std::chrono::steady_clock::time_point m__now_clock;
-	std::chrono::steady_clock::time_point m__last_clock;
 };
 
 void Server::setCloseCallback(const ServerCloseCall& call)

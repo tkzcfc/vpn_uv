@@ -3,7 +3,6 @@
 #include "Common.h"
 #include "Runnable.h"
 #include "SessionManager.h"
-#include <chrono>
 #include "../common/NetUVThreadMsg.h"
 
 NS_NET_UV_BEGIN
@@ -102,9 +101,6 @@ protected:
 	uv_loop_t m_loop;
 
 	clientStage m_clientStage;
-
-	std::chrono::steady_clock::time_point m__now_clock;
-	std::chrono::steady_clock::time_point m__last_clock;
 };
 
 void Client::setConnectCallback(const ClientConnectCall& call)

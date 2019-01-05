@@ -16,9 +16,6 @@ Server::Server()
 	memset(&m_idle, 0, sizeof(uv_idle_t));
 	memset(&m_sessionUpdateTimer, 0, sizeof(uv_timer_t));
 	memset(&m_loop, 0, sizeof(uv_loop_t));
-
-	m__now_clock = std::chrono::steady_clock::now();
-	m__last_clock = std::chrono::steady_clock::now();
 }
 
 Server::~Server()
@@ -119,19 +116,8 @@ void Server::stopSessionUpdate()
 void Server::uv_on_idle_run(uv_idle_t* handle)
 {
 	Server* svr = (Server*)handle->data;
-
-	svr->m__now_clock = std::chrono::steady_clock::now();
-	int64_t microseconds = std::chrono::duration_cast<std::chrono::milliseconds>(svr->m__now_clock - svr->m__last_clock).count();
-	/// fps:60
-	if (microseconds > 16)
-	{
-		svr->m__last_clock = svr->m__now_clock;
-		ThreadSleep(1);
-	}
-	else
-	{
-		svr->onIdleRun();
-	}
+	svr->onIdleRun();
+	ThreadSleep(1);
 }
 
 void Server::uv_on_session_update_timer_run(uv_timer_t* handle)
