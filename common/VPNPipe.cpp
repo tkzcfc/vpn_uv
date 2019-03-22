@@ -11,6 +11,7 @@ VPNPipe::VPNPipe(TYPE type)
 	, m_uniqueID(0)
 	, m_sessionCount(0)
 	, m_transmittedSize(0)
+	, m_net_uv_transmittedSize(0)
 	, m_checkTime(10)
 {
 #if USE_SNAPPY 
@@ -58,7 +59,7 @@ bool VPNPipe::start(const char* ip, uint32_t port)
 	m_port = port;
 	if (m_svr)
 	{
-		m_isStart = m_svr->startServer(ip, port, false);
+		m_isStart = m_svr->startServer(ip, port, false, 0xFFFF);
 	}
 	if (m_client)
 	{
@@ -138,6 +139,8 @@ void VPNPipe::send(char* data, uint32_t len)
 
 void VPNPipe::onRecvData(Session*session, char* data, uint32_t len)
 {
+	m_net_uv_transmittedSize += len;
+
 #if USE_SNAPPY
 	snappy::string out;
 	if (!snappy::Uncompress(data, len, &out))
@@ -186,12 +189,14 @@ void VPNPipe::updateFrame()
 	int64_t milliseconds = std::chrono::duration_cast<std::chrono::milliseconds>(curTime - m_lastTime).count();
 	if (milliseconds > 1000)
 	{
-		float speed = (float)m_transmittedSize / 1024.0f;
-		if (speed > 0.0f)
+		if (m_transmittedSize > 0U)
 		{
-			printf("%fkb/s\n", speed);
-		}
+			float speed = (float)m_transmittedSize / 1024.0f;
+			float uv_speed = (float)m_net_uv_transmittedSize / 1024.0f;
+			printf("%0.2fkb/s \t %0.2fkb/s\n", speed, uv_speed);
+		}		
 		m_transmittedSize = 0;
+		m_net_uv_transmittedSize = 0;
 		m_lastTime = curTime;
 		m_checkTime--;
 		if (m_checkTime <= 0)

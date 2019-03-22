@@ -1,0 +1,7 @@
+{
+"client_listenIP": "127.0.0.1",
+"remoteIP" : "47.75.218.200",
+"svr_listenIP" : "0.0.0.0",
+"client_listenPort" : 8527,
+"svr_listenPort" : 1002
+}

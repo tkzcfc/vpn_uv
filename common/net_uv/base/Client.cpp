@@ -74,9 +74,8 @@ void Client::stopSessionUpdate()
 
 void Client::uv_on_idle_run(uv_idle_t* handle)
 {
-	Client* client = (Client*)handle->data;
-	client->onIdleRun();
-	ThreadSleep(1);
+	Client* svr = (Client*)handle->data;
+	svr->onIdleRun();
 }
 
 void Client::uv_on_session_update_timer_run(uv_timer_t* handle)

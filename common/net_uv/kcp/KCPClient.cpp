@@ -455,6 +455,8 @@ void KCPClient::onIdleRun()
 	{
 		it.second->session->updateKcp(update_clock);
 	}
+
+	ThreadSleep(1);
 }
 
 void KCPClient::onSessionUpdateRun()

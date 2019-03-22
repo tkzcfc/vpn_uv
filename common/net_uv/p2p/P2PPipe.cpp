@@ -73,11 +73,13 @@ bool P2PPipe::kcpSend(char* data, uint32_t len, uint64_t key)
 
 void P2PPipe::send(P2PMessageID msgID, const char* data, int32_t len, uint32_t toIP, uint32_t toPort)
 {
+#if OPEN_NET_UV_DEBUG
 	if (msgID != P2P_MSG_ID_PING && msgID != P2P_MSG_ID_PONG && msgID != P2P_MSG_ID_KCP)
 	{
 		std::string logstr(data, len);
 		NET_UV_LOG(NET_UV_L_INFO, "send to [%u]:[%u]  [%d]%s", toIP, toPort, msgID, logstr.c_str());
 	}
+#endif
 
 	const int32_t alloc_len = sizeof(P2PMessage) + len;
 
@@ -118,11 +120,13 @@ void P2PPipe::send(P2PMessageID msgID, const char* data, int32_t len, uint32_t t
 
 void P2PPipe::send(P2PMessageID msgID, const char* data, int32_t len, const struct sockaddr* addr)
 {
+#if OPEN_NET_UV_DEBUG
 	if (msgID != P2P_MSG_ID_PING && msgID != P2P_MSG_ID_PONG && msgID != P2P_MSG_ID_KCP)
 	{
 		std::string logstr(data, len);
 		NET_UV_LOG(NET_UV_L_INFO, "send [%d]%s", msgID, logstr.c_str());
 	}
+#endif
 
 	const int32_t alloc_len = sizeof(P2PMessage) + len;
 

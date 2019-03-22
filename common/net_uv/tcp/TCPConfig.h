@@ -5,11 +5,6 @@ NS_NET_UV_BEGIN
 /// 基础配置
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-// 是否使用内置消息结构
-// 开启此选项以下配置才生效传送消息时使用TCPMsgHead结构
-// 关闭此选项后socket的接收发送为原始数据
-#define TCP_USE_NET_UV_MSG_STRUCT 0
-
 
 // 套接字最小接收缓存大小
 #define TCP_UV_SOCKET_RECV_BUF_LEN (1024 * 8)
@@ -24,8 +19,7 @@ NS_NET_UV_BEGIN
 
 // 单次消息发送最大字节
 // 若超过该长度，则进行分片发送
-// (4K)
-#define TCP_WRITE_MAX_LEN (1024 * 4)
+#define TCP_WRITE_MAX_LEN (1300)
 
 // 最大连接数
 #define TCP_MAX_CONNECT (0xFFFF)
@@ -47,11 +41,6 @@ NS_NET_UV_BEGIN
 // 是否开启在UV线程进行心跳校验
 // 如果关闭该选项，则需要在应用层自己做心跳校验
 #define TCP_OPEN_UV_THREAD_HEARTBEAT 1
-
-#if TCP_USE_NET_UV_MSG_STRUCT == 0
-#undef TCP_OPEN_UV_THREAD_HEARTBEAT
-#define TCP_OPEN_UV_THREAD_HEARTBEAT 0
-#endif
 
 
 #define TCP_HEARTBEAT_TIMER_DELAY (400)		// 心跳检测定时器间隔

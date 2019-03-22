@@ -1,12 +1,11 @@
 #pragma once
 
 
-#include "KCPSocket.h"
-#include "KCPSession.h"
+#include "Pure_TCPSession.h"
 
 NS_NET_UV_BEGIN
 
-class KCPServer : public Server
+class Pure_TCPServer : public Server
 {
 	struct serverSessionData
 	{
@@ -15,16 +14,16 @@ class KCPServer : public Server
 			isInvalid = false;
 			session = NULL;
 		}
-		KCPSession* session;
+		Pure_TCPSession* session;
 		bool isInvalid;
 	};
 
 public:
 
-	KCPServer();
-	KCPServer(const KCPServer&) = delete;
+	Pure_TCPServer();
+	Pure_TCPServer(const Pure_TCPServer&) = delete;
 
-	virtual ~KCPServer();
+	virtual ~Pure_TCPServer();
 
 	/// Server
 	virtual bool startServer(const char* ip, uint32_t port, bool isIPV6, int32_t maxCount)override;
@@ -38,13 +37,6 @@ public:
 
 	virtual void disconnect(uint32_t sessionID)override;
 
-	/// KCPServer
-	/// 使用服务器Socket向某个地址发送消息
-	/// ip: 仅支持IP地址 不支持域名解析
-	bool svrUdpSend(const char* ip, uint32_t port, bool isIPV6, char* data, uint32_t len);
-
-	bool svrUdpSend(struct sockaddr* addr, uint32_t addrlen, char* data, uint32_t len);
-
 protected:
 
 	/// Runnable
@@ -53,25 +45,23 @@ protected:
 	/// SessionManager
 	virtual void executeOperation()override;
 
-	/// KCPServer
-	void onNewConnect(Socket* socket);
+	/// TCPServer
+	void onNewConnect(uv_stream_t* server, int32_t status);
 
 	void onServerSocketClose(Socket* svr);
-
-	bool onServerSocketConnectFilter(const struct sockaddr* addr);
-
+	
 	void onSessionRecvData(Session* session, char* data, uint32_t len);
 
 	/// Server
 	virtual void onIdleRun()override;
 
 	virtual void onSessionUpdateRun()override;
-
+	
 protected:
 
 	void startFailureLogic();
 
-	void addNewSession(KCPSession* session);
+	void addNewSession(Pure_TCPSession* session);
 
 	void onSessionClose(Session* session);
 
@@ -80,10 +70,12 @@ protected:
 protected:
 	bool m_start;
 
-	KCPSocket* m_server;
+	TCPSocket* m_server;
 
 	// 会话管理
 	std::map<uint32_t, serverSessionData> m_allSession;
+
+	uint32_t m_sessionID;
 };
 
 

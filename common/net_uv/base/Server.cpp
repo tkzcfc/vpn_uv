@@ -21,7 +21,7 @@ Server::Server()
 Server::~Server()
 {}
 
-bool Server::startServer(const char* ip, uint32_t port, bool isIPV6)
+bool Server::startServer(const char* ip, uint32_t port, bool isIPV6, int32_t maxCount)
 {
 	assert(m_closeCall != nullptr);
 	assert(m_newConnectCall != nullptr);
@@ -117,7 +117,6 @@ void Server::uv_on_idle_run(uv_idle_t* handle)
 {
 	Server* svr = (Server*)handle->data;
 	svr->onIdleRun();
-	ThreadSleep(1);
 }
 
 void Server::uv_on_session_update_timer_run(uv_timer_t* handle)

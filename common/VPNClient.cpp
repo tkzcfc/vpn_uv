@@ -17,13 +17,13 @@ bool VPNClient::start(const char* localIP, uint32_t localPort, const char* remot
 		return false;
 	}
 
-	m_tcpSvr = std::make_unique<TCPServer>();
+	m_tcpSvr = std::make_unique<Pure_TCPServer>();
 	m_tcpSvr->setCloseCallback(std::bind(&VPNClient::on_tcp_ServerCloseCall, this, std::placeholders::_1));
 	m_tcpSvr->setNewConnectCallback(std::bind(&VPNClient::on_tcp_ServerNewConnectCall, this, std::placeholders::_1, std::placeholders::_2));
 	m_tcpSvr->setRecvCallback(std::bind(&VPNClient::on_tcp_ServerRecvCall, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3, std::placeholders::_4));
 	m_tcpSvr->setDisconnectCallback(std::bind(&VPNClient::on_tcp_ServerDisconnectCall, this, std::placeholders::_1, std::placeholders::_2));
 
-	bool r = m_tcpSvr->startServer(localIP, localPort, false);;
+	bool r = m_tcpSvr->startServer(localIP, localPort, false, 0xFFFF);
 	if (!r)
 	{
 		m_tcpSvr = NULL;

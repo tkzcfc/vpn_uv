@@ -46,6 +46,9 @@
     <Filter Include="common\snappy">
       <UniqueIdentifier>{ada96e78-8ccc-483e-be3f-217291e663fd}</UniqueIdentifier>
     </Filter>
+    <Filter Include="common\net_uv\puretcp">
+      <UniqueIdentifier>{d6e0b2c3-6549-4f5b-8c5d-ceec8612501b}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -242,6 +245,18 @@
     </ClCompile>
     <ClCompile Include="..\common\snappy\snappy-c.cc">
       <Filter>common\snappy</Filter>
+    </ClCompile>
+    <ClCompile Include="..\common\net_uv\puretcp\Pure_TCPSession.cpp">
+      <Filter>common\net_uv\puretcp</Filter>
+    </ClCompile>
+    <ClCompile Include="..\common\net_uv\puretcp\Pure_TCPClient.cpp">
+      <Filter>common\net_uv\puretcp</Filter>
+    </ClCompile>
+    <ClCompile Include="..\common\net_uv\puretcp\Pure_TCPServer.cpp">
+      <Filter>common\net_uv\puretcp</Filter>
+    </ClCompile>
+    <ClCompile Include="..\common\VPNConfig.cpp">
+      <Filter>common</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -457,6 +472,21 @@
     </ClInclude>
     <ClInclude Include="..\common\snappy\snappy-c.h">
       <Filter>common\snappy</Filter>
+    </ClInclude>
+    <ClInclude Include="..\common\net_uv\puretcp\Pure_TCPSession.h">
+      <Filter>common\net_uv\puretcp</Filter>
+    </ClInclude>
+    <ClInclude Include="..\common\net_uv\puretcp\Pure_TCPClient.h">
+      <Filter>common\net_uv\puretcp</Filter>
+    </ClInclude>
+    <ClInclude Include="..\common\net_uv\puretcp\Pure_TCPCommon.h">
+      <Filter>common\net_uv\puretcp</Filter>
+    </ClInclude>
+    <ClInclude Include="..\common\net_uv\puretcp\Pure_TCPServer.h">
+      <Filter>common\net_uv\puretcp</Filter>
+    </ClInclude>
+    <ClInclude Include="..\common\VPNConfig.h">
+      <Filter>common</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

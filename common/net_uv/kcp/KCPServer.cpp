@@ -38,14 +38,14 @@ KCPServer::~KCPServer()
 	NET_UV_LOG(NET_UV_L_INFO, "KCPServer destroy...");
 }
 
-bool KCPServer::startServer(const char* ip, uint32_t port, bool isIPV6)
+bool KCPServer::startServer(const char* ip, uint32_t port, bool isIPV6, int32_t maxCount)
 {
 	if (m_serverStage != ServerStage::STOP || m_start)
 	{
 		return false;
 	}
 
-	Server::startServer(ip, port, isIPV6);
+	Server::startServer(ip, port, isIPV6, maxCount);
 
 	int32_t r = uv_loop_init(&m_loop);
 	CHECK_UV_ASSERT(r);
@@ -77,7 +77,7 @@ bool KCPServer::startServer(const char* ip, uint32_t port, bool isIPV6)
 		return false;
 	}
 
-	bool suc = m_server->listen();
+	bool suc = m_server->listen(maxCount);
 	if (!suc)
 	{
 		startFailureLogic();
@@ -473,6 +473,8 @@ void KCPServer::onIdleRun()
 	default:
 		break;
 	}
+
+	ThreadSleep(1);
 }
 
 void KCPServer::onSessionUpdateRun()

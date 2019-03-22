@@ -22,7 +22,7 @@
     <ProjectGuid>{FE129D24-1B0C-4DA9-BCD9-E9BA40485151}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>
     <RootNamespace>server</RootNamespace>
-    <WindowsTargetPlatformVersion>10.0.17763.0</WindowsTargetPlatformVersion>
+    <WindowsTargetPlatformVersion>8.1</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
@@ -34,20 +34,20 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
-    <PlatformToolset>v141</PlatformToolset>
+    <PlatformToolset>v140</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
     <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
-    <PlatformToolset>v141</PlatformToolset>
+    <PlatformToolset>v140</PlatformToolset>
     <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
-    <PlatformToolset>v141</PlatformToolset>
+    <PlatformToolset>v140</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
     <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
@@ -197,6 +197,9 @@
     <ClCompile Include="..\common\net_uv\kcp\KCPSocket.cpp" />
     <ClCompile Include="..\common\net_uv\kcp\KCPSocketManager.cpp" />
     <ClCompile Include="..\common\net_uv\kcp\KCPUtils.cpp" />
+    <ClCompile Include="..\common\net_uv\puretcp\Pure_TCPClient.cpp" />
+    <ClCompile Include="..\common\net_uv\puretcp\Pure_TCPServer.cpp" />
+    <ClCompile Include="..\common\net_uv\puretcp\Pure_TCPSession.cpp" />
     <ClCompile Include="..\common\net_uv\tcp\TCPClient.cpp" />
     <ClCompile Include="..\common\net_uv\tcp\TCPServer.cpp" />
     <ClCompile Include="..\common\net_uv\tcp\TCPSession.cpp" />
@@ -208,6 +211,7 @@
     <ClCompile Include="..\common\snappy\snappy-stubs-internal.cc" />
     <ClCompile Include="..\common\snappy\snappy.cc" />
     <ClCompile Include="..\common\VPNClient.cpp" />
+    <ClCompile Include="..\common\VPNConfig.cpp" />
     <ClCompile Include="..\common\VPNPipe.cpp" />
     <ClCompile Include="..\common\VPNServer.cpp" />
     <ClCompile Include="main.cpp" />
@@ -266,6 +270,10 @@
     <ClInclude Include="..\common\net_uv\kcp\KCPSocketManager.h" />
     <ClInclude Include="..\common\net_uv\kcp\KCPUtils.h" />
     <ClInclude Include="..\common\net_uv\net_uv.h" />
+    <ClInclude Include="..\common\net_uv\puretcp\Pure_TCPClient.h" />
+    <ClInclude Include="..\common\net_uv\puretcp\Pure_TCPCommon.h" />
+    <ClInclude Include="..\common\net_uv\puretcp\Pure_TCPServer.h" />
+    <ClInclude Include="..\common\net_uv\puretcp\Pure_TCPSession.h" />
     <ClInclude Include="..\common\net_uv\tcp\TCPClient.h" />
     <ClInclude Include="..\common\net_uv\tcp\TCPCommon.h" />
     <ClInclude Include="..\common\net_uv\tcp\TCPConfig.h" />
@@ -282,6 +290,7 @@
     <ClInclude Include="..\common\snappy\snappy.h" />
     <ClInclude Include="..\common\Socks5Msg.h" />
     <ClInclude Include="..\common\VPNClient.h" />
+    <ClInclude Include="..\common\VPNConfig.h" />
     <ClInclude Include="..\common\VPNPipe.h" />
     <ClInclude Include="..\common\VPNServer.h" />
   </ItemGroup>

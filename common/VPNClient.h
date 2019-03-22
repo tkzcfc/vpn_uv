@@ -36,7 +36,7 @@ protected:
 	void on_pipeRecvCallback(char* data, uint32_t len);
 	
 protected:
-	std::unique_ptr<TCPServer> m_tcpSvr;
+	std::unique_ptr<Pure_TCPServer> m_tcpSvr;
 	std::unique_ptr<VPNPipe> m_pipe;
 	bool m_isStart;
 

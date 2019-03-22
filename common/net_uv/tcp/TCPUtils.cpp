@@ -90,17 +90,6 @@ uv_buf_t* tcp_packageData(char* data, uint32_t len, int32_t* bufCount)
 		return NULL;
 	}
 
-#if TCP_USE_NET_UV_MSG_STRUCT == 0
-
-	*bufCount = 1;
-
-	uv_buf_t* outBuf = (uv_buf_t*)fc_malloc(sizeof(uv_buf_t));
-	outBuf->base = (char*)fc_malloc(len);
-	memcpy(outBuf->base, data, len);
-	outBuf->len = len;
-	
-	return outBuf;
-#else
 	if (len > TCP_BIG_MSG_MAX_LEN)
 	{
 #if defined (WIN32) || defined(_WIN32)
@@ -195,7 +184,6 @@ uv_buf_t* tcp_packageData(char* data, uint32_t len, int32_t* bufCount)
 		outBuf->len = sendlen;
 	}
 	return outBuf;
-#endif
 }
 
 // 打包心跳消息

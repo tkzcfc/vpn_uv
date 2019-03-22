@@ -147,7 +147,7 @@ uint32_t KCPSocket::bind6(const char* ip, uint32_t port)
 	return port;
 }
 
-bool KCPSocket::listen()
+bool KCPSocket::listen(int32_t count)
 {
 	if (m_socketMng)
 		return true;

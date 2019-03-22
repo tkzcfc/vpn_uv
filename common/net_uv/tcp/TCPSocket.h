@@ -19,7 +19,7 @@ public:
 
 	virtual unsigned int bind6(const char* ip, unsigned int port)override;
 
-	virtual bool listen()override;
+	virtual bool listen(int32_t count)override;
 
 	virtual bool connect(const char* ip, unsigned int port)override;
 

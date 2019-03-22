@@ -103,9 +103,9 @@ uint32_t TCPSocket::bind6(const char* ip, uint32_t port)
 	return port;
 }
 
-bool TCPSocket::listen()
+bool TCPSocket::listen(int32_t count)
 {
-	int32_t r = uv_listen((uv_stream_t *)m_tcp, TCP_MAX_CONNECT, server_on_after_new_connection);
+	int32_t r = uv_listen((uv_stream_t *)m_tcp, count, server_on_after_new_connection);
 	return (r == 0);
 }
 

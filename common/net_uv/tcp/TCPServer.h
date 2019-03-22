@@ -27,7 +27,7 @@ public:
 	virtual ~TCPServer();
 
 	/// Server
-	virtual bool startServer(const char* ip, uint32_t port, bool isIPV6)override;
+	virtual bool startServer(const char* ip, uint32_t port, bool isIPV6, int32_t maxCount)override;
 
 	virtual bool stopServer()override;
 

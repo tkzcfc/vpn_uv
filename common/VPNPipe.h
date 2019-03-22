@@ -11,9 +11,9 @@
 NS_NET_UV_OPEN;
 
 // 最大会话数量
-#define VPN_PIPE_MAX_SESSION_COUNT (50)
+#define VPN_PIPE_MAX_SESSION_COUNT (0xFFFF)
 // 预分配回话数量
-#define VPN_PIPE_PRE_SESSION_COUNT (8)
+#define VPN_PIPE_PRE_SESSION_COUNT (2)
 
 
 #define USE_SNAPPY 1
@@ -140,6 +140,7 @@ protected:
 #endif
 	std::chrono::time_point<std::chrono::high_resolution_clock> m_lastTime;
 	uint32_t m_transmittedSize;
+	uint32_t m_net_uv_transmittedSize;
 };
 
 

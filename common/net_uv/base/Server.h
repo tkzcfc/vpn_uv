@@ -30,7 +30,7 @@ public:
 	Server();
 	virtual ~Server();
 
-	virtual bool startServer(const char* ip, uint32_t port, bool isIPV6);
+	virtual bool startServer(const char* ip, uint32_t port, bool isIPV6, int32_t maxCount);
 
 	virtual bool stopServer() = 0;
 

@@ -25,7 +25,7 @@ public:
 
 	virtual uint32_t bind6(const char* ip, uint32_t port) = 0;
 
-	virtual bool listen() = 0;
+	virtual bool listen(int32_t count) = 0;
 
 	virtual bool connect(const char* ip, uint32_t port) = 0;
 

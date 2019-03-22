@@ -1,4 +1,5 @@
 #include "VPNClient.h"
+#include "VPNConfig.h"
 #include <iostream>
 
 void ready_call(bool isReady)
@@ -15,30 +16,44 @@ void ready_call(bool isReady)
 
 void main()
 {
-	net_uv::DNSCache::getInstance()->setEnable(false);
-	VPNClient* c = new VPNClient();
-
-	//const char* remoteIP = "39.105.20.204";
-	//const char* remoteIP = "113.10.244.202";
-	//const char* remoteIP = "127.0.0.1";
-
-	const char* remoteIP = "47.75.218.200";
-
-	if (!c->start("0.0.0.0", 8527, remoteIP, 1002, ready_call))
+	VPNConfig cfg;
+	if (!cfg.initWithFile(g_vpnConfigFile))
 	{
-		printf("start fail...\n");
-		system("pause");
-		return;
+		printf("配置文件'%s'不存在,使用默认配置\n\n%s\n\n\n", g_vpnConfigFile, g_vpnDefaultConfig);
+		cfg.initWithContent(g_vpnDefaultConfig);
 	}
 
-	printf("正在连接服务器...\n");
-	while (true)
+	if (cfg.isInit())
 	{
-		c->updateFrame();
-		Sleep(1);
-	}
-	delete c;
+		net_uv::DNSCache::getInstance()->setEnable(false);
 
+		std::string client_listenIP = cfg.getString("client_listenIP");
+		std::string remoteIP = cfg.getString("remoteIP");
+		std::string svr_listenIP = cfg.getString("svr_listenIP");
+		int32_t client_listenPort = cfg.getInt32("client_listenPort");
+		int32_t svr_listenPort = cfg.getInt32("svr_listenPort");
+
+		VPNClient* client = new VPNClient();
+		
+		if (!client->start(client_listenIP.c_str(), client_listenPort, remoteIP.c_str(), svr_listenPort, ready_call))
+		{
+			printf("start fail...\n");
+			system("pause");
+			return;
+		}
+
+		printf("正在连接服务器...\n");
+		while (true)
+		{
+			client->updateFrame();
+			Sleep(1);
+		}
+		delete client;
+	}
+	else
+	{
+		printf("读取配置失败\n");
+	}
 	system("pause");
 }
 

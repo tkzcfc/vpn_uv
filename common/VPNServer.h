@@ -37,7 +37,7 @@ protected:
 
 protected:
 
-	std::unique_ptr<TCPClient> m_client;
+	std::unique_ptr<Pure_TCPClient> m_client;
 	std::unique_ptr<VPNPipe> m_pipe;
 	uint32_t m_clientUniqueSessionID;
 

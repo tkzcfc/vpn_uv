@@ -24,3 +24,8 @@
 // p2p
 #include "p2p/P2PPeer.h"
 #include "p2p/P2PTurn.h"
+
+// puretcp
+#include "puretcp/Pure_TCPSession.h"
+#include "puretcp/Pure_TCPClient.h"
+#include "puretcp/Pure_TCPServer.h"

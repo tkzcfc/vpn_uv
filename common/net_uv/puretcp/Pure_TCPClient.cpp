@@ -1,63 +1,34 @@
-#include "TCPClient.h"
-#include "TCPCommon.h"
-#include "TCPUtils.h"
+#include "Pure_TCPClient.h"
 
 NS_NET_UV_BEGIN
-
-//断线重连定时器检测间隔
-#define TCP_CLIENT_TIMER_DELAY (0.1f)
 
 
 enum 
 {
-	TCP_CLI_OP_CONNECT,			//	连接
-	TCP_CLI_OP_SENDDATA,		// 发送数据
-	TCP_CLI_OP_DISCONNECT,		// 断开连接
-	TCP_CLI_OP_SET_AUTO_CONNECT,//设置自动连接
-	TCP_CLI_OP_SET_RECON_TIME,	//设置重连时间
-	TCP_CLI_OP_SET_KEEP_ALIVE,	//设置心跳
-	TCP_CLI_OP_SET_NO_DELAY,	//设置NoDelay
-	TCP_CLI_OP_CLIENT_CLOSE,	//客户端退出
-	TCP_CLI_OP_REMOVE_SESSION,	//移除会话命令
-	TCP_CLI_OP_DELETE_SESSION,	//删除会话
+	Pure_TCP_CLI_OP_CONNECT,			//	连接
+	Pure_TCP_CLI_OP_SENDDATA,		// 发送数据
+	Pure_TCP_CLI_OP_DISCONNECT,		// 断开连接
+	Pure_TCP_CLI_OP_SET_KEEP_ALIVE,	//设置心跳
+	Pure_TCP_CLI_OP_SET_NO_DELAY,	//设置NoDelay
+	Pure_TCP_CLI_OP_CLIENT_CLOSE,	//客户端退出
+	Pure_TCP_CLI_OP_REMOVE_SESSION,	//移除会话命令
+	Pure_TCP_CLI_OP_DELETE_SESSION,	//删除会话
 };
 
 // 连接操作
-struct TCPClientConnectOperation
+struct Pure_TCPClientConnectOperation
 {
-	TCPClientConnectOperation() {}
-	~TCPClientConnectOperation() {}
+	Pure_TCPClientConnectOperation() {}
+	~Pure_TCPClientConnectOperation() {}
 	std::string ip;
 	uint32_t port;
 	uint32_t sessionID;
 };
 
-// 设置自动连接操作
-struct TCPClientAutoConnectOperation
-{
-	TCPClientAutoConnectOperation() {}
-	~TCPClientAutoConnectOperation() {}
-	bool isAuto;
-	uint32_t sessionID;
-};
-
-// 设置重连时间操作
-struct TCPClientReconnectTimeOperation
-{
-	TCPClientReconnectTimeOperation() {}
-	~TCPClientReconnectTimeOperation() {}
-	float time;
-	uint32_t sessionID;
-};
-
-
-
 
 //////////////////////////////////////////////////////////////////////////////////
-TCPClient::TCPClient()
-	: m_reconnect(true)
-	, m_totalTime(3.0f)
-	, m_enableNoDelay(true)
+Pure_TCPClient::Pure_TCPClient()
+	: m_enableNoDelay(true)
 	, m_enableKeepAlive(false)
 	, m_keepAliveDelay(10)
 	, m_isStop(false)
@@ -67,16 +38,15 @@ TCPClient::TCPClient()
 	m_clientStage = clientStage::START;
 	
 	startIdle();
-	startSessionUpdate(TCP_HEARTBEAT_TIMER_DELAY);
 
 	uv_timer_init(&m_loop, &m_clientUpdateTimer);
 	m_clientUpdateTimer.data = this;
-	uv_timer_start(&m_clientUpdateTimer, uv_client_update_timer_run, (uint64_t)(TCP_CLIENT_TIMER_DELAY * 1000), (uint64_t)(TCP_CLIENT_TIMER_DELAY * 1000));
+	uv_timer_start(&m_clientUpdateTimer, uv_client_update_timer_run, (uint64_t)100, (uint64_t)100);
 
 	this->startThread();
 }
 
-TCPClient::~TCPClient()
+Pure_TCPClient::~Pure_TCPClient()
 {
 	closeClient();
 	this->join();
@@ -84,31 +54,31 @@ TCPClient::~TCPClient()
 }
 
 
-void TCPClient::connect(const char* ip, uint32_t port, uint32_t sessionId)
+void Pure_TCPClient::connect(const char* ip, uint32_t port, uint32_t sessionId)
 {
 	if (m_isStop)
 		return;
 
 	assert(ip != NULL);
 
-	TCPClientConnectOperation* opData = (TCPClientConnectOperation*)fc_malloc(sizeof(TCPClientConnectOperation));
-	new (opData)TCPClientConnectOperation();
+	Pure_TCPClientConnectOperation* opData = (Pure_TCPClientConnectOperation*)fc_malloc(sizeof(Pure_TCPClientConnectOperation));
+	new (opData)Pure_TCPClientConnectOperation();
 
 	opData->ip = ip;
 	opData->port = port;
 	opData->sessionID = sessionId;
-	pushOperation(TCP_CLI_OP_CONNECT, opData, 0U, 0U);
+	pushOperation(Pure_TCP_CLI_OP_CONNECT, opData, 0U, 0U);
 }
 
-void TCPClient::closeClient()
+void Pure_TCPClient::closeClient()
 {
 	if (m_isStop)
 		return;
 	m_isStop = true;
-	pushOperation(TCP_CLI_OP_CLIENT_CLOSE, NULL, 0U, 0U);
+	pushOperation(Pure_TCP_CLI_OP_CLIENT_CLOSE, NULL, 0U, 0U);
 }
 
-void TCPClient::updateFrame()
+void Pure_TCPClient::updateFrame()
 {
 	if (m_msgMutex.trylock() != 0)
 	{
@@ -177,7 +147,7 @@ void TCPClient::updateFrame()
 			{
 				m_removeSessionCall(this, Msg.pSession);
 			}
-			pushOperation(TCP_CLI_OP_DELETE_SESSION, NULL, 0U, Msg.pSession->getSessionID());
+			pushOperation(Pure_TCP_CLI_OP_DELETE_SESSION, NULL, 0U, Msg.pSession->getSessionID());
 		}break;
 		default:
 			break;
@@ -190,59 +160,51 @@ void TCPClient::updateFrame()
 	}
 }
 
-void TCPClient::removeSession(uint32_t sessionId)
+void Pure_TCPClient::removeSession(uint32_t sessionId)
 {
-	pushOperation(TCP_CLI_OP_REMOVE_SESSION, NULL, 0U, sessionId);
+	pushOperation(Pure_TCP_CLI_OP_REMOVE_SESSION, NULL, 0U, sessionId);
 }
 
 /// SessionManager
 
-void TCPClient::disconnect(uint32_t sessionId)
+void Pure_TCPClient::disconnect(uint32_t sessionId)
 {
 	if (m_isStop)
 		return;
 
-	pushOperation(TCP_CLI_OP_DISCONNECT, NULL, 0U, sessionId);
+	pushOperation(Pure_TCP_CLI_OP_DISCONNECT, NULL, 0U, sessionId);
 }
 
-void TCPClient::send(uint32_t sessionId, char* data, uint32_t len)
+void Pure_TCPClient::send(uint32_t sessionId, char* data, uint32_t len)
 {
 	if (m_isStop)
 		return;
 
 	if (data == 0 || len <= 0)
 		return;
-	int32_t bufCount = 0;
 
-	uv_buf_t* bufArr = tcp_packageData(data, len, &bufCount);
-
-	if (bufArr == NULL)
-		return;
-
-	for (int32_t i = 0; i < bufCount; ++i)
-	{
-		pushOperation(TCP_CLI_OP_SENDDATA, (bufArr + i)->base, (bufArr + i)->len, sessionId);
-	}
-	fc_free(bufArr);
+	char* pdata = (char*)fc_malloc(len);
+	memcpy(pdata, data, len);
+	pushOperation(Pure_TCP_CLI_OP_SENDDATA, pdata, len, sessionId);
 }
 
 /// TCPClient
-bool TCPClient::isCloseFinish()
+bool Pure_TCPClient::isCloseFinish()
 {
 	return (m_clientStage == clientStage::STOP);
 }
 
-bool TCPClient::setSocketNoDelay(bool enable)
+bool Pure_TCPClient::setSocketNoDelay(bool enable)
 {
 	if (m_isStop)
 		return false;
 
 	m_enableNoDelay = enable;
-	pushOperation(TCP_CLI_OP_SET_NO_DELAY, NULL, 0U, 0U);
+	pushOperation(Pure_TCP_CLI_OP_SET_NO_DELAY, NULL, 0U, 0U);
 	return true;
 }
 
-bool TCPClient::setSocketKeepAlive(int32_t enable, uint32_t delay)
+bool Pure_TCPClient::setSocketKeepAlive(int32_t enable, uint32_t delay)
 {
 	if (m_isStop)
 		return false;
@@ -250,72 +212,12 @@ bool TCPClient::setSocketKeepAlive(int32_t enable, uint32_t delay)
 	m_enableKeepAlive = enable;
 	m_keepAliveDelay = delay;
 	
-	pushOperation(TCP_CLI_OP_SET_KEEP_ALIVE, NULL, 0U, 0U);
+	pushOperation(Pure_TCP_CLI_OP_SET_KEEP_ALIVE, NULL, 0U, 0U);
 	return true;
 }
 
-void TCPClient::setAutoReconnect(bool isAuto)
-{
-	if (m_isStop)
-		return;
-
-	m_reconnect = isAuto;
-
-	TCPClientAutoConnectOperation* opData = (TCPClientAutoConnectOperation*)fc_malloc(sizeof(TCPClientAutoConnectOperation));
-	new(opData) TCPClientAutoConnectOperation();
-
-	opData->isAuto = isAuto;
-	opData->sessionID = -1;
-
-	pushOperation(TCP_CLI_OP_SET_AUTO_CONNECT, opData, NULL, NULL);
-}
-
-void TCPClient::setAutoReconnectTime(float time)
-{
-	if (m_isStop)
-		return;
-
-	m_totalTime = time;
-
-	TCPClientReconnectTimeOperation* opData = (TCPClientReconnectTimeOperation*)fc_malloc(sizeof(TCPClientReconnectTimeOperation));
-	new(opData) TCPClientReconnectTimeOperation();
-
-	opData->sessionID = -1;
-	opData->time = time;
-
-	pushOperation(TCP_CLI_OP_SET_RECON_TIME, opData, NULL, NULL);
-}
-
-void TCPClient::setAutoReconnectBySessionID(uint32_t sessionID, bool isAuto)
-{
-	if (m_isStop)
-		return;
-
-	TCPClientAutoConnectOperation* opData = (TCPClientAutoConnectOperation*)fc_malloc(sizeof(TCPClientAutoConnectOperation));
-	new(opData) TCPClientAutoConnectOperation();
-
-	opData->isAuto = isAuto;
-	opData->sessionID = sessionID;
-
-	pushOperation(TCP_CLI_OP_SET_AUTO_CONNECT, opData, NULL, NULL);
-}
-
-void TCPClient::setAutoReconnectTimeBySessionID(uint32_t sessionID, float time)
-{
-	if (m_isStop)
-		return;
-
-	TCPClientReconnectTimeOperation* opData = (TCPClientReconnectTimeOperation*)fc_malloc(sizeof(TCPClientReconnectTimeOperation));
-	new(opData) TCPClientReconnectTimeOperation();
-
-	opData->sessionID = sessionID;
-	opData->time = time;
-
-	pushOperation(TCP_CLI_OP_SET_RECON_TIME, opData, NULL, NULL);
-}
-
 /// Runnable
-void TCPClient::run()
+void Pure_TCPClient::run()
 {
 	uv_run(&m_loop, UV_RUN_DEFAULT);
 
@@ -327,7 +229,7 @@ void TCPClient::run()
 }
 
 /// SessionManager
-void TCPClient::executeOperation()
+void Pure_TCPClient::executeOperation()
 {
 	if (m_operationMutex.trylock() != 0)
 	{
@@ -352,7 +254,7 @@ void TCPClient::executeOperation()
 		auto & curOperation = m_operationDispatchQue.front();
 		switch (curOperation.operationType)
 		{
-		case TCP_CLI_OP_SENDDATA:		// 数据发送
+		case Pure_TCP_CLI_OP_SENDDATA:		// 数据发送
 		{
 			auto sessionData = getClientSessionDataBySessionId(curOperation.sessionID);
 			if (sessionData && !sessionData->removeTag)
@@ -364,7 +266,7 @@ void TCPClient::executeOperation()
 				fc_free(curOperation.operationData);
 			}
 		}break;
-		case TCP_CLI_OP_DISCONNECT:	// 断开连接
+		case Pure_TCP_CLI_OP_DISCONNECT:	// 断开连接
 		{
 			auto sessionData = getClientSessionDataBySessionId(curOperation.sessionID);
 			if (sessionData->connectState == CONNECT)
@@ -373,64 +275,16 @@ void TCPClient::executeOperation()
 				sessionData->session->executeDisconnect();
 			}
 		}break;
-		case TCP_CLI_OP_CONNECT:	// 连接
+		case Pure_TCP_CLI_OP_CONNECT:	// 连接
 		{
 			if (curOperation.operationData)
 			{
 				createNewConnect(curOperation.operationData);
-				((TCPClientConnectOperation*)curOperation.operationData)->~TCPClientConnectOperation();
+				((Pure_TCPClientConnectOperation*)curOperation.operationData)->~Pure_TCPClientConnectOperation();
 				fc_free(curOperation.operationData);
 			}
 		}break;
-		case TCP_CLI_OP_SET_AUTO_CONNECT: //设置自动连接
-		{
-			if (curOperation.operationData)
-			{
-				TCPClientAutoConnectOperation* opData = (TCPClientAutoConnectOperation*)curOperation.operationData;
-				if (opData->sessionID == -1)
-				{
-					for (auto& it : m_allSessionMap)
-					{
-						it.second->reconnect = opData->isAuto;
-					}
-				}
-				else
-				{
-					auto sessionData = getClientSessionDataBySessionId(opData->sessionID);
-					if (sessionData)
-					{
-						sessionData->reconnect = opData->isAuto;
-					}
-				}
-				opData->~TCPClientAutoConnectOperation();
-				fc_free(opData);
-			}
-		}break;
-		case TCP_CLI_OP_SET_RECON_TIME: //设置重连时间
-		{
-			if (curOperation.operationData)
-			{
-				TCPClientReconnectTimeOperation* opData = (TCPClientReconnectTimeOperation*)curOperation.operationData;
-				if (opData->sessionID == -1)
-				{
-					for (auto& it : m_allSessionMap)
-					{
-						it.second->totaltime = opData->time;
-					}
-				}
-				else
-				{
-					auto sessionData = getClientSessionDataBySessionId(opData->sessionID);
-					if (sessionData)
-					{
-						sessionData->totaltime = opData->time;
-					}
-				}
-				opData->~TCPClientReconnectTimeOperation();
-				fc_free(opData);
-			}
-		}break;
-		case TCP_CLI_OP_SET_KEEP_ALIVE: //心跳设置
+		case Pure_TCP_CLI_OP_SET_KEEP_ALIVE: //心跳设置
 		{
 			for (auto& it : m_allSessionMap)
 			{
@@ -441,7 +295,7 @@ void TCPClient::executeOperation()
 				}
 			}
 		}break;
-		case TCP_CLI_OP_SET_NO_DELAY:// 设置nodelay
+		case Pure_TCP_CLI_OP_SET_NO_DELAY:// 设置nodelay
 		{
 			for (auto& it : m_allSessionMap)
 			{
@@ -452,12 +306,12 @@ void TCPClient::executeOperation()
 				}
 			}
 		}break;
-		case TCP_CLI_OP_CLIENT_CLOSE://客户端关闭
+		case Pure_TCP_CLI_OP_CLIENT_CLOSE://客户端关闭
 		{
 			m_clientStage = clientStage::CLEAR_SESSION;
 			stopSessionUpdate();
 		}break;
-		case TCP_CLI_OP_REMOVE_SESSION:
+		case Pure_TCP_CLI_OP_REMOVE_SESSION:
 		{
 			auto sessionData = getClientSessionDataBySessionId(curOperation.sessionID);
 			if (sessionData)
@@ -477,12 +331,12 @@ void TCPClient::executeOperation()
 				}
 			}
 		}break;
-		case TCP_CLI_OP_DELETE_SESSION://删除会话
+		case Pure_TCP_CLI_OP_DELETE_SESSION://删除会话
 		{
 			auto it = m_allSessionMap.find(curOperation.sessionID);
 			if (it != m_allSessionMap.end() && it->second->removeTag)
 			{
-				it->second->session->~TCPSession();
+				it->second->session->~Pure_TCPSession();
 				fc_free(it->second->session);
 				it->second->~clientSessionData();
 				fc_free(it->second);
@@ -496,22 +350,17 @@ void TCPClient::executeOperation()
 	}
 }
 
-void TCPClient::onIdleRun()
+void Pure_TCPClient::onIdleRun()
 {
 	executeOperation();
 	ThreadSleep(1);
 }
 
-void TCPClient::onSessionUpdateRun()
-{
-	for (auto& it : m_allSessionMap)
-	{
-		it.second->session->update(TCP_HEARTBEAT_TIMER_DELAY);
-	}
-}
+void Pure_TCPClient::onSessionUpdateRun()
+{}
 
 /// TCPClient
-void TCPClient::onSocketConnect(Socket* socket, int32_t status)
+void Pure_TCPClient::onSocketConnect(Socket* socket, int32_t status)
 {
 	Session* pSession = NULL;
 	bool isSuc = (status == 1);
@@ -566,7 +415,7 @@ void TCPClient::onSocketConnect(Socket* socket, int32_t status)
 	}
 }
 
-void TCPClient::onSessionClose(Session* session)
+void Pure_TCPClient::onSessionClose(Session* session)
 {
 	auto sessionData = getClientSessionDataBySession(session);
 	if (sessionData)
@@ -581,11 +430,11 @@ void TCPClient::onSessionClose(Session* session)
 	}
 }
 
-void TCPClient::createNewConnect(void* data)
+void Pure_TCPClient::createNewConnect(void* data)
 {
 	if (data == NULL)
 		return;
-	TCPClientConnectOperation* opData = (TCPClientConnectOperation*)data;
+	Pure_TCPClientConnectOperation* opData = (Pure_TCPClientConnectOperation*)data;
 
 	auto it = m_allSessionMap.find(opData->sessionID);
 	if (it != m_allSessionMap.end())
@@ -611,21 +460,18 @@ void TCPClient::createNewConnect(void* data)
 	{
 		TCPSocket* socket = (TCPSocket*)fc_malloc(sizeof(TCPSocket));
 		new (socket) TCPSocket(&m_loop); 
-		socket->setConnectCallback(std::bind(&TCPClient::onSocketConnect, this, std::placeholders::_1, std::placeholders::_2));
+		socket->setConnectCallback(std::bind(&Pure_TCPClient::onSocketConnect, this, std::placeholders::_1, std::placeholders::_2));
 
-		TCPSession* session = TCPSession::createSession(this, socket);
+		Pure_TCPSession* session = Pure_TCPSession::createSession(this, socket);
 
 		if (session == NULL)
 		{
 			NET_UV_LOG(NET_UV_L_FATAL, "创建会话失败，可能是内存不足!!!");
 			return;
 		}
-		session->setSessionRecvCallback(std::bind(&TCPClient::onSessionRecvData, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3));
-		session->setSessionClose(std::bind(&TCPClient::onSessionClose, this, std::placeholders::_1));
+		session->setSessionRecvCallback(std::bind(&Pure_TCPClient::onSessionRecvData, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3));
+		session->setSessionClose(std::bind(&Pure_TCPClient::onSessionClose, this, std::placeholders::_1));
 		session->setSessionID(opData->sessionID);
-		session->setSendHeartMsg(NET_HEARTBEAT_MSG_C2S);
-		session->setHeartMaxCount(TCP_HEARTBEAT_MAX_COUNT_CLIENT);
-		session->setResetHeartCount(TCP_HEARTBEAT_COUNT_RESET_VALUE_CLIENT);
 		session->setIsOnline(false);
 		
 		clientSessionData* cs = (clientSessionData*)fc_malloc(sizeof(clientSessionData));
@@ -634,9 +480,6 @@ void TCPClient::createNewConnect(void* data)
 		cs->ip = opData->ip;
 		cs->port = opData->port;
 		cs->session = session;
-		cs->curtime = 0;
-		cs->reconnect = m_reconnect;
-		cs->totaltime = m_totalTime;
 		cs->connectState = CONNECTSTATE::CONNECTING;
 
 		m_allSessionMap.insert(std::make_pair(opData->sessionID, cs));
@@ -653,12 +496,12 @@ void TCPClient::createNewConnect(void* data)
 	}
 }
 
-void TCPClient::onSessionRecvData(Session* session, char* data, uint32_t len)
+void Pure_TCPClient::onSessionRecvData(Session* session, char* data, uint32_t len)
 {
 	pushThreadMsg(NetThreadMsgType::RECV_DATA, session, data, len);
 }
 
-TCPClient::clientSessionData* TCPClient::getClientSessionDataBySessionId(uint32_t sessionId)
+Pure_TCPClient::clientSessionData* Pure_TCPClient::getClientSessionDataBySessionId(uint32_t sessionId)
 {
 	auto it = m_allSessionMap.find(sessionId);
 	if (it != m_allSessionMap.end())
@@ -666,7 +509,7 @@ TCPClient::clientSessionData* TCPClient::getClientSessionDataBySessionId(uint32_
 	return NULL;
 }
 
-TCPClient::clientSessionData* TCPClient::getClientSessionDataBySession(Session* session)
+Pure_TCPClient::clientSessionData* Pure_TCPClient::getClientSessionDataBySession(Session* session)
 {
 	for (auto &it : m_allSessionMap)
 	{
@@ -678,11 +521,11 @@ TCPClient::clientSessionData* TCPClient::getClientSessionDataBySession(Session* 
 	return NULL;
 }
 
-void TCPClient::clearData()
+void Pure_TCPClient::clearData()
 {
 	for (auto & it : m_allSessionMap)
 	{
-		it.second->session->~TCPSession();
+		it.second->session->~Pure_TCPSession();
 		fc_free(it.second->session);
 		it.second->~clientSessionData();
 		fc_free(it.second);
@@ -705,34 +548,18 @@ void TCPClient::clearData()
 		auto & curOperation = m_operationQue.front();
 		switch (curOperation.operationType)
 		{
-		case TCP_CLI_OP_SENDDATA:			// 数据发送
+		case Pure_TCP_CLI_OP_SENDDATA:			// 数据发送
 		{
 			if (curOperation.operationData)
 			{
 				fc_free(curOperation.operationData);
 			}
 		}break;
-		case TCP_CLI_OP_CONNECT:			// 连接
+		case Pure_TCP_CLI_OP_CONNECT:			// 连接
 		{
 			if (curOperation.operationData)
 			{
-				((TCPClientConnectOperation*)curOperation.operationData)->~TCPClientConnectOperation();
-				fc_free(curOperation.operationData);
-			}
-		}break;
-		case TCP_CLI_OP_SET_AUTO_CONNECT:	//设置自动连接
-		{
-			if (curOperation.operationData)
-			{
-				((TCPClientAutoConnectOperation*)curOperation.operationData)->~TCPClientAutoConnectOperation();
-				fc_free(curOperation.operationData);
-			}
-		}break;
-		case TCP_CLI_OP_SET_RECON_TIME:		//设置重连时间
-		{
-			if (curOperation.operationData)
-			{
-				((TCPClientReconnectTimeOperation*)curOperation.operationData)->~TCPClientReconnectTimeOperation();
+				((Pure_TCPClientConnectOperation*)curOperation.operationData)->~Pure_TCPClientConnectOperation();
 				fc_free(curOperation.operationData);
 			}
 		}break;
@@ -741,34 +568,9 @@ void TCPClient::clearData()
 	}
 }
 
-void TCPClient::onClientUpdate()
+void Pure_TCPClient::onClientUpdate()
 {
-	if (m_clientStage == clientStage::START)
-	{
-		clientSessionData* data = NULL;
-		for (auto& it : m_allSessionMap)
-		{
-			data = it.second;
-			if (data->connectState == CONNECTSTATE::DISCONNECT && data->reconnect && data->removeTag == false)
-			{
-				data->curtime = data->curtime + TCP_CLIENT_TIMER_DELAY;
-
-				if (data->curtime >= data->totaltime)
-				{
-					data->curtime = 0.0f;
-					if (data->session->executeConnect(data->ip.c_str(), data->port))
-					{
-						data->connectState = CONNECTSTATE::CONNECTING;
-					}
-					else
-					{
-						data->connectState = CONNECTSTATE::DISCONNECT;
-					}
-				}
-			}
-		}
-	}
-	else if (m_clientStage == clientStage::CLEAR_SESSION)
+	if (m_clientStage == clientStage::CLEAR_SESSION)
 	{
 		clientSessionData* data = NULL;
 		for (auto& it : m_allSessionMap)
@@ -803,9 +605,9 @@ void TCPClient::onClientUpdate()
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
-void TCPClient::uv_client_update_timer_run(uv_timer_t* handle)
+void Pure_TCPClient::uv_client_update_timer_run(uv_timer_t* handle)
 {
-	TCPClient* c = (TCPClient*)handle->data;
+	Pure_TCPClient* c = (Pure_TCPClient*)handle->data;
 	c->onClientUpdate();
 }
 

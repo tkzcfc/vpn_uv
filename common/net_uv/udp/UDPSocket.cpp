@@ -108,7 +108,7 @@ uint32_t UDPSocket::bind6(const char* ip, uint32_t port)
 	return port;
 }
 
-bool UDPSocket::listen()
+bool UDPSocket::listen(int32_t count)
 {
 	return true;
 }

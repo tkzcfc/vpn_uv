@@ -1,5 +1,7 @@
 #include "DNSCache.h"
 #include <time.h>
+#include <stdlib.h>
+#include <iostream>
 
 NS_NET_UV_BEGIN
 

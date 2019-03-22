@@ -29,13 +29,12 @@ bool VPNServer::start(const char* ip, uint32_t port)
 		m_pipe = NULL;
 		return false;
 	}
-	m_client = std::make_unique<TCPClient>();
+	m_client = std::make_unique<Pure_TCPClient>();
 	m_client->setConnectCallback(std::bind(&VPNServer::on_ClientConnectCall, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3));
 	m_client->setDisconnectCallback(std::bind(&VPNServer::on_ClientDisconnectCall, this, std::placeholders::_1, std::placeholders::_2));
 	m_client->setRecvCallback(std::bind(&VPNServer::on_ClientRecvCall, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3, std::placeholders::_4));
 	m_client->setClientCloseCallback(std::bind(&VPNServer::on_ClientCloseCall, this, std::placeholders::_1));
 	m_client->setRemoveSessionCallback(std::bind(&VPNServer::on_ClientRemoveSessionCall, this, std::placeholders::_1, std::placeholders::_2));
-	m_client->setAutoReconnect(false);
 
 	m_clientStop = false;
 	m_pipeStop = false;
