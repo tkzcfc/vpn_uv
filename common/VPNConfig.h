@@ -26,8 +26,8 @@ protected:
 static const char* g_vpnConfigFile = "config.json";
 static const char* g_vpnDefaultConfig = "{"
 "\"client_listenIP\": \"0.0.0.0\","
-"\"remoteIP\" : \"47.75.218.200\","
 "\"svr_listenIP\" : \"0.0.0.0\","
+"\"remoteIP\" : \"47.75.218.200\","
 "\"client_listenPort\" : 8527,"
 "\"svr_listenPort\" : 1002"
 "}";
