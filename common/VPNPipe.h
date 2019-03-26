@@ -35,8 +35,8 @@ typedef std::function<void(char*, uint32_t)> pipeRecvCallback;
 typedef std::function<void()> pipeCloseCallback;
 typedef std::function<void(bool)> pipeReadyCallback;
 
-typedef KCPClient PipeClient;
-typedef KCPServer PipeServer;
+typedef TCPClient PipeClient;
+typedef TCPServer PipeServer;
 
 class VPNPipe
 {
