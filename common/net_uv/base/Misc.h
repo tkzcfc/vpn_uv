@@ -30,6 +30,8 @@ uint32_t net_getsockAddrPort(const struct sockaddr* addr);
 
 struct sockaddr* net_tcp_getAddr(const uv_tcp_t* handle);
 
+uint32_t net_tcp_getListenPort(const uv_tcp_t* handle);
+
 uint32_t net_getAddrPort(const struct sockaddr* addr);
 
 uint32_t net_udp_getPort(uv_udp_t* handle);

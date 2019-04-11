@@ -51,34 +51,35 @@ bool TCPServer::startServer(const char* ip, uint32_t port, bool isIPV6, int32_t 
 	m_server->setCloseCallback(std::bind(&TCPServer::onServerSocketClose, this, std::placeholders::_1));
 	m_server->setNewConnectionCallback(std::bind(&TCPServer::onNewConnect, this, std::placeholders::_1, std::placeholders::_2));
 
-	uint32_t outPort = 0U;
+	bool ok = true;
 	if (m_isIPV6)
 	{
-		outPort = m_server->bind6(m_ip.c_str(), m_port);
+		ok = m_server->bind6(m_ip.c_str(), m_port);
 	}
 	else
 	{
-		outPort = m_server->bind(m_ip.c_str(), m_port);
+		ok = m_server->bind(m_ip.c_str(), m_port);
 	}
 
-	if (outPort == 0)
+	if (!ok)
 	{
 		startFailureLogic();
 		return false;
 	}
-
+	
 	bool suc = m_server->listen(maxCount);
 	if (!suc)
 	{
 		startFailureLogic();
 		return false;
 	}
-	NET_UV_LOG(NET_UV_L_INFO, "TCPServer %s:%u start-up...", m_ip.c_str(), getListenPort());
 
 	m_start = true;
 	m_serverStage = ServerStage::RUN;
 
-	setListenPort(outPort);
+	setListenPort(m_server->getPort());
+	NET_UV_LOG(NET_UV_L_INFO, "TCPServer %s:%u start-up...", m_ip.c_str(), getListenPort());
+
 	startThread();
 
 	return true;

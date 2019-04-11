@@ -61,34 +61,35 @@ bool KCPServer::startServer(const char* ip, uint32_t port, bool isIPV6, int32_t 
 	m_server->setNewConnectionCallback(std::bind(&KCPServer::onNewConnect, this, std::placeholders::_1));
 	m_server->setConnectFilterCallback(std::bind(&KCPServer::onServerSocketConnectFilter, this, std::placeholders::_1));
 
-	uint32_t bindPort = 0;
+	bool ok = true;
 	if (m_isIPV6)
 	{
-		bindPort = m_server->bind6(m_ip.c_str(), m_port);
+		ok = m_server->bind6(m_ip.c_str(), m_port);
 	}
 	else
 	{
-		bindPort = m_server->bind(m_ip.c_str(), m_port);
+		ok = m_server->bind(m_ip.c_str(), m_port);
 	}
 
-	if (bindPort == 0)
+	if (!ok)
 	{
 		startFailureLogic();
 		return false;
 	}
-
+	
 	bool suc = m_server->listen(maxCount);
 	if (!suc)
 	{
 		startFailureLogic();
 		return false;
 	}
-	NET_UV_LOG(NET_UV_L_INFO, "KCPServer %s:%u start-up...", ip, bindPort);
 
 	m_start = true;
 	m_serverStage = ServerStage::RUN;
 
-	setListenPort(bindPort);
+	setListenPort(m_server->getPort());
+	NET_UV_LOG(NET_UV_L_INFO, "KCPServer %s:%u start-up...", m_ip.c_str(), getListenPort());
+
 	startThread();
 
 	return true;

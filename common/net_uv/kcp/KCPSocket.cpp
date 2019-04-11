@@ -69,11 +69,11 @@ KCPSocket::~KCPSocket()
 	stopIdle();
 }
 
-uint32_t KCPSocket::bind(const char* ip, uint32_t port)
+bool KCPSocket::bind(const char* ip, uint32_t port)
 {
 	if (m_udp != NULL)
 	{
-		return 0;
+		return false;
 	}
 
 	this->setIp(ip);
@@ -85,7 +85,7 @@ uint32_t KCPSocket::bind(const char* ip, uint32_t port)
 
 	if (r != 0)
 	{
-		return 0;
+		return false;
 	}
 
 	m_udp = (uv_udp_t*)fc_malloc(sizeof(uv_udp_t));
@@ -94,25 +94,15 @@ uint32_t KCPSocket::bind(const char* ip, uint32_t port)
 	m_udp->data = this;
 
 	r = uv_udp_bind(m_udp, (const struct sockaddr*) &bind_addr, UV_UDP_REUSEADDR);
-
-	if (r != 0)
-	{
-		return 0;
-	}
-	net_adjustBuffSize((uv_handle_t*)m_udp, KCP_UV_SOCKET_RECV_BUF_LEN, KCP_UV_SOCKET_SEND_BUF_LEN);
-
-	if (port == 0)
-	{
-		return net_udp_getPort(m_udp);
-	}
-	return port;
+	
+	return (r == 0);
 }
 
-uint32_t KCPSocket::bind6(const char* ip, uint32_t port)
+bool KCPSocket::bind6(const char* ip, uint32_t port)
 {
 	if (m_udp != NULL)
 	{
-		return 0;
+		return false;
 	}
 
 	this->setIp(ip);
@@ -124,7 +114,7 @@ uint32_t KCPSocket::bind6(const char* ip, uint32_t port)
 
 	if (r != 0)
 	{
-		return 0;
+		return false;
 	}
 
 	m_udp = (uv_udp_t*)fc_malloc(sizeof(uv_udp_t));
@@ -134,17 +124,7 @@ uint32_t KCPSocket::bind6(const char* ip, uint32_t port)
 
 	r = uv_udp_bind(m_udp, (const struct sockaddr*) &bind_addr, UV_UDP_REUSEADDR);
 
-	if (r != 0)
-	{
-		return 0;
-	}
-	net_adjustBuffSize((uv_handle_t*)m_udp, KCP_UV_SOCKET_RECV_BUF_LEN, KCP_UV_SOCKET_SEND_BUF_LEN);
-
-	if (port == 0)
-	{
-		return net_udp_getPort(m_udp);
-	}
-	return port;
+	return (r == 0);
 }
 
 bool KCPSocket::listen(int32_t count)
@@ -167,6 +147,14 @@ bool KCPSocket::listen(int32_t count)
 	m_socketMng = (KCPSocketManager*)fc_malloc(sizeof(KCPSocketManager));
 	new (m_socketMng) KCPSocketManager(m_loop);
 	m_socketMng->setOwner(this);
+
+	net_adjustBuffSize((uv_handle_t*)m_udp, KCP_UV_SOCKET_RECV_BUF_LEN, KCP_UV_SOCKET_SEND_BUF_LEN);
+
+	if (getPort() == 0)
+	{
+		setPort(net_udp_getPort(m_udp));
+	}
+
 	return true;
 }
 

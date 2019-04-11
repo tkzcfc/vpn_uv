@@ -23,9 +23,9 @@ public:
 
 	virtual ~KCPSocket();
 
-	virtual uint32_t bind(const char* ip, uint32_t port)override;
+	virtual bool bind(const char* ip, uint32_t port)override;
 
-	virtual uint32_t bind6(const char* ip, uint32_t port)override;
+	virtual bool bind6(const char* ip, uint32_t port)override;
 
 	virtual bool listen(int32_t count)override;
 

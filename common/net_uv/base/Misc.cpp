@@ -315,6 +315,34 @@ struct sockaddr* net_tcp_getAddr(const uv_tcp_t* handle)
 	return client_addr;
 }
 
+uint32_t net_tcp_getListenPort(const uv_tcp_t* handle)
+{
+	int32_t client_addr_length = sizeof(sockaddr_in6) * 2;
+	struct sockaddr* client_addr = (struct sockaddr*)fc_malloc(client_addr_length);
+	memset(client_addr, 0, client_addr_length);
+
+	int32_t r = uv_tcp_getsockname(handle, client_addr, &client_addr_length);
+
+	uint32_t outPort = 0;
+
+	if (r == 0)
+	{
+		if (client_addr->sa_family == AF_INET6)
+		{
+			const struct sockaddr_in6* addr_in = (const struct sockaddr_in6*) client_addr;
+			outPort = ntohs(addr_in->sin6_port);
+		}
+		else
+		{
+			const struct sockaddr_in* addr_in = (const struct sockaddr_in*) client_addr;
+			outPort = ntohs(addr_in->sin_port);
+		}
+	}
+	fc_free(client_addr);
+
+	return outPort;
+}
+
 uint32_t net_getAddrPort(const struct sockaddr* addr)
 {
 	uint32_t outPort = 0;

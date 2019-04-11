@@ -339,7 +339,7 @@ void KCPClient::executeOperation()
 		case KCP_CLI_OP_DISCONNECT:	// ¶Ï¿ªÁ¬½Ó
 		{
 			auto sessionData = getClientSessionDataBySessionId(curOperation.sessionID);
-			if (sessionData->connectState == CONNECT)
+			if (sessionData && sessionData->connectState == CONNECT)
 			{
 				sessionData->connectState = DISCONNECTING;
 				sessionData->session->executeDisconnect();

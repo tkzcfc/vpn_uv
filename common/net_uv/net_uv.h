@@ -29,3 +29,11 @@
 #include "puretcp/Pure_TCPSession.h"
 #include "puretcp/Pure_TCPClient.h"
 #include "puretcp/Pure_TCPServer.h"
+
+// http
+#include "http/HttpRequest.h"
+#include "http/HttpResponse.h"
+#include "http/HttpContext.h"
+#include "http/HttpServer.h"
+#include "http/HttpDetail.h"
+

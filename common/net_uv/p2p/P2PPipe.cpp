@@ -41,15 +41,14 @@ bool P2PPipe::bind(const char* bindIP, uint32 binPort, uv_loop_t* loop)
 
 	m_socket->setReadCallback(std::bind(&P2PPipe::on_udp_read, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3, std::placeholders::_4, std::placeholders::_5));
 
-	uint32 bindPort = m_socket->bind(bindIP, binPort);
-
-	NET_UV_LOG(NET_UV_L_INFO, "bind [%u]", bindPort);
-
-	if (bindPort == 0)
+	if (!m_socket->bind(bindIP, binPort))
 	{
 		shutdownSocket();
 		return false;
 	}
+
+	NET_UV_LOG(NET_UV_L_INFO, "bind [%u]", binPort);
+
 	return true;
 }
 

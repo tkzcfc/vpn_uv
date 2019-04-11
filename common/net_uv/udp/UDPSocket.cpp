@@ -16,7 +16,7 @@ UDPSocket::~UDPSocket()
 	shutdownSocket();
 }
 
-uint32_t UDPSocket::bind(const char* ip, uint32_t port)
+bool UDPSocket::bind(const char* ip, uint32_t port)
 {
 	if (m_udp != NULL)
 	{
@@ -52,17 +52,13 @@ uint32_t UDPSocket::bind(const char* ip, uint32_t port)
 	if (r != 0)
 	{
 		NET_UV_LOG(NET_UV_L_ERROR, "uv_udp_recv_start error: %s", net_getUVError(r).c_str());
-		return 0;
+		return false;
 	}
 
-	if (port == 0)
-	{
-		return net_udp_getPort(m_udp);
-	}
-	return port;
+	return true;
 }
 
-uint32_t UDPSocket::bind6(const char* ip, uint32_t port)
+bool UDPSocket::bind6(const char* ip, uint32_t port)
 {
 	if (m_udp != NULL)
 	{
@@ -98,18 +94,23 @@ uint32_t UDPSocket::bind6(const char* ip, uint32_t port)
 	if (r != 0)
 	{
 		NET_UV_LOG(NET_UV_L_ERROR, "uv_udp_recv_start error: %s", net_getUVError(r).c_str());
-		return 0;
+		return false;
 	}
 
-	if (port == 0)
-	{
-		return net_udp_getPort(m_udp);
-	}
-	return port;
+	return true;
 }
 
 bool UDPSocket::listen(int32_t count)
 {
+	if (m_udp == NULL)
+	{
+		return false;
+	}
+
+	if (getPort() == 0)
+	{
+		setPort(net_udp_getPort(m_udp));
+	}
 	return true;
 }
 

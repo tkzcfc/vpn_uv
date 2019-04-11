@@ -23,7 +23,7 @@ TCPSocket::~TCPSocket()
 	}
 }
 
-uint32_t TCPSocket::bind(const char* ip, uint32_t port)
+bool TCPSocket::bind(const char* ip, uint32_t port)
 {
 	this->setIp(ip);
 	this->setPort(port);
@@ -32,7 +32,7 @@ uint32_t TCPSocket::bind(const char* ip, uint32_t port)
 	int32_t r = uv_ip4_addr(ip, port, &bind_addr);
 	if (r != 0)
 	{
-		return 0;
+		return false;
 	}
 
 	if (m_tcp == NULL)
@@ -46,24 +46,10 @@ uint32_t TCPSocket::bind(const char* ip, uint32_t port)
 
 	r = uv_tcp_bind(m_tcp, (const struct sockaddr*) &bind_addr, 0);
 
-	if (r != 0)
-	{
-		return 0;
-	}
-
-	if (port == 0)
-	{
-		struct sockaddr* client_addr = net_tcp_getAddr(m_tcp);
-		
-		if (client_addr == NULL)
-			return 0;
-
-		return net_getAddrPort(client_addr);
-	}
-	return port;
+	return (r == 0);
 }
 
-uint32_t TCPSocket::bind6(const char* ip, uint32_t port)
+bool TCPSocket::bind6(const char* ip, uint32_t port)
 {
 	this->setIp(ip);
 	this->setPort(port);
@@ -72,7 +58,7 @@ uint32_t TCPSocket::bind6(const char* ip, uint32_t port)
 	int32_t r = uv_ip6_addr(ip, port, &bind_addr);
 	if (r != 0)
 	{
-		return 0;
+		return false;
 	}
 
 	if (m_tcp == NULL)
@@ -86,26 +72,18 @@ uint32_t TCPSocket::bind6(const char* ip, uint32_t port)
 
 	r = uv_tcp_bind(m_tcp, (const struct sockaddr*) &bind_addr, 0);
 
-	if (r != 0)
-	{
-		return 0;
-	}
-
-	if (port == 0)
-	{
-		struct sockaddr* client_addr = net_tcp_getAddr(m_tcp);
-
-		if (client_addr == NULL)
-			return 0;
-
-		return net_getAddrPort(client_addr);
-	}
-	return port;
+	return (r == 0);
 }
 
 bool TCPSocket::listen(int32_t count)
 {
 	int32_t r = uv_listen((uv_stream_t *)m_tcp, count, server_on_after_new_connection);
+
+	if (r == 0 && getPort() == 0)
+	{
+		setPort(net_tcp_getListenPort(m_tcp));
+	}
+
 	return (r == 0);
 }
 

@@ -18,12 +18,9 @@ public:
 	Socket();
 	virtual ~Socket();
 	
-	// 返回值说明
-	// 0 : bind失败
-	// 其他 : 绑定的端口
-	virtual uint32_t bind(const char* ip, uint32_t port) = 0;
+	virtual bool bind(const char* ip, uint32_t port) = 0;
 
-	virtual uint32_t bind6(const char* ip, uint32_t port) = 0;
+	virtual bool bind6(const char* ip, uint32_t port) = 0;
 
 	virtual bool listen(int32_t count) = 0;
 
