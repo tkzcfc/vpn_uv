@@ -36,6 +36,8 @@ protected:
 
 	const char* searchCrlf(const char* begin, const char* end);
 
+	const char* searchStr(const char* sbegin, const char* send, const char* tbegin, const char* tend);
+
 private:
 
 	HttpRequestParseState m_state;

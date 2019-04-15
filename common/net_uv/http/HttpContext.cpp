@@ -9,9 +9,38 @@ HttpContext::HttpContext()
 {
 }
 
+const char* HttpContext::searchStr(const char* sbegin, const char* send, const char* tbegin, const char* tend)
+{
+	if (sbegin == NULL || send == NULL || tbegin == NULL || tend == NULL)
+		return NULL;
+
+	if (sbegin == send || tbegin == tend)
+		return NULL;
+
+	const char* tb = NULL;
+	for (const char* b = sbegin; b != send; b++)
+	{
+		if (*b == tbegin[0])
+		{
+			const char* s_tmp = b + 1;
+			const char* t_tmp = tbegin + 1;
+			while (t_tmp != tend && s_tmp != send)
+			{
+				if (*t_tmp != *s_tmp)
+					break;
+				s_tmp++;
+				t_tmp++;
+			}
+			if (t_tmp == tend)
+				return b;
+		}
+	}
+	return NULL;
+}
+
 const char* HttpContext::searchCrlf(const char* begin, const char* end)
 {
-	const char* crlf = std::search(begin, end, kCRLF, kCRLF + 2);
+	const char* crlf = searchStr(begin, end, kCRLF, kCRLF + 2);
 	return crlf == begin ? NULL : crlf;
 }
 
