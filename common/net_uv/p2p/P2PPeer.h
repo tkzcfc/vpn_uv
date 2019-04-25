@@ -6,7 +6,8 @@ NS_NET_UV_BEGIN
 
 using P2PPeerStartCallback = std::function<void(bool isSuccess)>;
 using P2PPeerNewConnectCallback = std::function<void(uint64_t key)>;
-using P2PPeerConnectToPeerCallback = std::function<void(uint64_t key, bool isSuccess)>;
+// 0 找不到目标  1 成功 2 超时  3该节点已经作为客户端连接到本节点
+using P2PPeerConnectToPeerCallback = std::function<void(uint64_t key, int status)>;  
 using P2PPeerConnectToTurnCallback = std::function<void(bool isSuccess, uint64_t selfKey)>;
 using P2PPeerDisConnectToPeerCallback = std::function<void(uint64_t key)>;
 using P2PPeerDisConnectToTurnCallback = std::function<void()>;
@@ -70,7 +71,7 @@ protected:
 
 	void onPipeNewSessionCallback(uint64_t key);
 
-	void onPipeNewKcpCreateCallback(uint64_t key);
+	void onPipeNewKcpCreateCallback(uint64_t key, uint32_t tag);
 
 	void onPipeRemoveSessionCallback(uint64_t key);
 
@@ -80,13 +81,17 @@ protected:
 
 	void runInputOperation();
 
-	void startBurrow(uint64_t toKey);
+	void startBurrow(uint64_t toKey, bool isClient);
+
+	void stopBurrow(uint64_t key);
 
 	void doConnectToTurn();
 
 	void doSendCreateKcp(uint64_t toKey);
 
 	void clearData();
+
+	void getLocalAddressIPV4Info(std::vector<LocNetAddrInfo>& infoArr);
 
 protected:
 
@@ -135,22 +140,25 @@ protected:
 	enum SessionState
 	{
 		DISCONNECT,
+		CHECKING,
+		CONNECTING,
 		CONNECT,
 	};
 	struct SessionData
 	{
 		SessionState state;
 		uint16_t tryConnectCount;
-		std::string sendData;
-		bool isClient;
+		AddrInfo sendToAddr;
 	};
-	std::map<uint64_t, SessionData> m_sessionManager;
+	std::map<uint64_t, SessionData> m_connectToPeerSessionMng;
+	std::map<uint64_t, bool> m_acceptPerrSessionMng;
 
 	// 打洞数据
 	struct BurrowData
 	{
 		sockaddr_in targetAddr;
 		uint16_t sendCount;
+		std::string sendData;
 	};
 	std::map<uint64_t, BurrowData> m_burrowManager;
 
@@ -162,6 +170,8 @@ protected:
 	P2PPeerDisConnectToTurnCallback m_disConnectToTurnCallback;
 	P2PPeerRecvCallback			m_recvCallback;
 	P2PPeerCloseCallback		m_closeCallback;
+
+	std::vector<LocNetAddrInfo> m_localAddrInfoCache;
 };
 
 

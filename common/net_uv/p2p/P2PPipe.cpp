@@ -41,13 +41,13 @@ bool P2PPipe::bind(const char* bindIP, uint32 binPort, uv_loop_t* loop)
 
 	m_socket->setReadCallback(std::bind(&P2PPipe::on_udp_read, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3, std::placeholders::_4, std::placeholders::_5));
 
-	if (!m_socket->bind(bindIP, binPort))
+	if (!m_socket->bind(bindIP, binPort) || !m_socket->listen(0))
 	{
 		shutdownSocket();
 		return false;
 	}
 
-	NET_UV_LOG(NET_UV_L_INFO, "bind [%u]", binPort);
+	NET_UV_LOG(NET_UV_L_INFO, "bind [%u]", m_socket->getPort());
 
 	return true;
 }
@@ -233,17 +233,6 @@ void P2PPipe::shutdownSocket()
 	m_allSessionDataMap.clear();
 }
 
-void P2PPipe::setSessionStartCheck(uint64_t key, bool isStartCheck)
-{
-	auto it = m_allSessionDataMap.find(key);
-	if (it != m_allSessionDataMap.end() && it->second.isStartCheck != isStartCheck)
-	{
-		it->second.isStartCheck = isStartCheck;
-		it->second.lastCheckTime = m_updateTime;
-		it->second.noResponseCount = 0;
-	}
-}
-
 bool P2PPipe::isContain(uint64_t key)
 {
 	return (m_allSessionDataMap.find(key) != m_allSessionDataMap.end());
@@ -405,13 +394,13 @@ void P2PPipe::on_recv_pong(uint64_t key, rapidjson::Document& document, const st
 
 void P2PPipe::on_recv_createKcp(uint64_t key, rapidjson::Document& document, const struct sockaddr* addr)
 {
-	createKcp(key, 0xFFFF);
+	createKcp(key, 0xFFFF, 0);
 	this->send(P2PMessageID::P2P_MSG_ID_CREATE_KCP_RESULT, P2P_NULL_JSON, P2P_NULL_JSON_LEN, addr);
 }
 
 void P2PPipe::on_recv_createKcpResult(uint64_t key, rapidjson::Document& document, const struct sockaddr* addr)
 {
-	createKcp(key, 0xFFFF);
+	createKcp(key, 0xFFFF, 1);
 }
 
 void P2PPipe::on_recv_disconnect(uint64_t key, rapidjson::Document& document, const struct sockaddr* addr)
@@ -424,7 +413,7 @@ void P2PPipe::on_recv_disconnect(uint64_t key, rapidjson::Document& document, co
 	}
 }
 
-void P2PPipe::createKcp(uint64_t key, uint32_t conv)
+void P2PPipe::createKcp(uint64_t key, uint32_t conv, uint32_t tag)
 {
 	auto it = m_allSessionDataMap.find(key);
 	if (it != m_allSessionDataMap.end() && it->second.kcp == NULL)
@@ -446,7 +435,7 @@ void P2PPipe::createKcp(uint64_t key, uint32_t conv)
 
 		it->second.isStartCheck = true;
 
-		m_newKcpCreateCallback(key);
+		m_newKcpCreateCallback(key, tag);
 	}
 }
 

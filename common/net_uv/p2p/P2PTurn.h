@@ -4,6 +4,8 @@
 
 NS_NET_UV_BEGIN
 
+#define PEER_LOCAL_ADDR_INFO_MAX_COUNT 3
+
 class P2PTurn : public Runnable
 {
 public:
@@ -50,6 +52,20 @@ protected:
 	TurnState m_state;
 	uv_loop_t m_loop;
 	uv_idle_t m_idle;
+
+	struct PeerData
+	{
+		PeerData()
+		{
+			localAddrInfoCount = 0;
+			addrInfo.key = 0;
+		}
+		LocNetAddrInfo localAddrInfoArr[PEER_LOCAL_ADDR_INFO_MAX_COUNT];
+		uint32_t localAddrInfoCount;
+		AddrInfo addrInfo;
+	};
+	
+	std::map<uint64_t, PeerData> m_key_peerDataMap;
 };
 
 NS_NET_UV_END

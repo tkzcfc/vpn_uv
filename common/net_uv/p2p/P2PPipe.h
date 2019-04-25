@@ -8,7 +8,7 @@ NS_NET_UV_BEGIN
 using P2PPipeRecvJsonCallback = std::function<void(P2PMessageID msgID, rapidjson::Document& document, uint64_t key, const struct sockaddr* addr)>;
 using P2PPipeRecvKcpCallback = std::function<void(char* data, uint32_t len, uint64_t key, const struct sockaddr* addr)>;
 using P2PPipeNewSessionCallback = std::function<void(uint64_t key)>;
-using P2PPipeNewKcpCreateCallback = std::function<void(uint64_t key)>;
+using P2PPipeNewKcpCreateCallback = std::function<void(uint64_t key, uint32_t tag)>;
 using P2PPipeRemoveSessionCallback = std::function<void(uint64_t key)>;
 
 class P2PPipe;
@@ -54,11 +54,11 @@ public:
 
 	void update(uint32_t updateTime);
 
-	void setSessionStartCheck(uint64_t key, bool isStartCheck);
-
 	bool isContain(uint64_t key);
 
 	void close();
+
+	inline UDPSocket* getSocket();
 
 	inline void setRecvJsonCallback(const P2PPipeRecvJsonCallback& call);
 
@@ -88,7 +88,7 @@ protected:
 
 	void on_recv_disconnect(uint64_t key, rapidjson::Document& document, const struct sockaddr* addr);
 
-	void createKcp(uint64_t key, uint32_t conv);
+	void createKcp(uint64_t key, uint32_t conv, uint32_t tag);
 
 	void recvData(uint64_t key, const struct sockaddr* addr);
 
@@ -116,6 +116,11 @@ protected:
 	P2PPipeNewKcpCreateCallback m_newKcpCreateCallback;
 	P2PPipeRemoveSessionCallback m_removeSessionCallback;
 };
+
+UDPSocket* P2PPipe::getSocket()
+{
+	return m_socket;
+}
 
 void P2PPipe::setRecvJsonCallback(const P2PPipeRecvJsonCallback& call)
 {

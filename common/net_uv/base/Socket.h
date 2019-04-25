@@ -35,8 +35,6 @@ public:
 	inline void setCloseCallback(const SocketCloseCall& call);
 
 	inline void setRecvCallback(const SocketRecvCall& call);
-
-	inline uint32_t getBindPort();
 public:
 
 	inline std::string getIp();
@@ -69,7 +67,6 @@ protected:
 	
 	std::string m_ip;
 	uint32_t m_port;
-	uint32_t m_bindPort;
 	bool m_isIPV6;
 
 	void* m_userdata;
@@ -139,14 +136,5 @@ uv_loop_t* Socket::getLoop()
 	return m_loop;
 }
 
-uint32_t Socket::getBindPort()
-{
-	return m_bindPort;
-}
-
-void Socket::setBindPort(uint32_t port)
-{
-	m_bindPort = port;
-}
 
 NS_NET_UV_END

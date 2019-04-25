@@ -21,12 +21,13 @@ enum P2PMessageID
 	
 	P2P_MSG_ID_C2T_CLIENT_LOGIN,			// 客户端登录 1007
 	P2P_MSG_ID_T2C_CLIENT_LOGIN_RESULT,		// 客户端登录结果 1008
+	
+	P2P_MSG_ID_T2C_START_BURROW,			// 开始打洞指令 1009
 
-	P2P_MSG_ID_C2T_WANT_TO_CONNECT,			// 想要连接到某个客户端 1009
+	P2P_MSG_ID_C2C_HELLO,					// 打洞消息 1010
 
-	P2P_MSG_ID_T2C_START_BURROW,			// 开始打洞指令 1010
-
-	P2P_MSG_ID_C2C_HELLO,					// 打洞消息 1011
+	P2P_MSG_ID_C2T_CHECK_PEER,				// 向Turn查询某个客户端信息 1011
+	P2P_MSG_ID_C2T_CHECK_PEER_RESULT,		// 1012
 	
 	P2P_MSG_ID_JSON_END,
 
@@ -59,6 +60,13 @@ struct P2PNodeInfo
 {
 	// 公网地址信息
 	AddrInfo addr;
+};
+
+// 本地网络信息
+struct LocNetAddrInfo
+{
+	AddrInfo addr;
+	uint32_t mask;
 };
 
 static const char* P2P_NULL_JSON = "{}";
