@@ -69,7 +69,10 @@ void KCPSession::executeSend(char* data, uint32_t len)
 
 	if (isOnline())
 	{
-		m_socket->send(data, len);
+		if (!m_socket->send(data, len))
+		{
+			executeDisconnect();
+		}
 	}
 	fc_free(data);
 }

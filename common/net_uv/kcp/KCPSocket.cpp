@@ -219,8 +219,7 @@ bool KCPSocket::send(char* data, int32_t len)
 	{
 		return false;
 	}
-	ikcp_send(m_kcp, data, len);
-	return true;
+	return ikcp_send(m_kcp, data, len) >= 0;
 }
 
 void KCPSocket::disconnect()
