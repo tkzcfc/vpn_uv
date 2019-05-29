@@ -191,9 +191,24 @@ void VPNPipe::updateFrame()
 	{
 		if (m_transmittedSize > 0U)
 		{
-			float speed = (float)m_transmittedSize / 1024.0f;
-			float uv_speed = (float)m_net_uv_transmittedSize / 1024.0f;
-			printf("%0.2fkb/s \t %0.2fkb/s\n", speed, uv_speed);
+			if (m_transmittedSize < 1024)
+			{
+				float speed = (float)m_transmittedSize;
+				float uv_speed = (float)m_net_uv_transmittedSize;
+				printf("%0.2fbytes/s \t %0.2fbytes/s\n", speed, uv_speed);
+			}
+			else if (m_transmittedSize < 1024 * 1024)
+			{
+				float speed = (float)m_transmittedSize / 1024.0f;
+				float uv_speed = (float)m_net_uv_transmittedSize / 1024.0f;
+				printf("%0.2fkb/s \t %0.2fkb/s\n", speed, uv_speed);
+			}
+			else
+			{
+				float speed = (float)m_transmittedSize / (1024.0f * 1024.0f);
+				float uv_speed = (float)m_net_uv_transmittedSize / (1024.0f * 1024.0f);
+				printf("%0.2fmb/s \t %0.2fmb/s\n", speed, uv_speed);
+			}
 		}		
 		m_transmittedSize = 0;
 		m_net_uv_transmittedSize = 0;
