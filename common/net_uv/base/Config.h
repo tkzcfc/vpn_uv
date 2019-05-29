@@ -16,7 +16,7 @@
 // 开启内存检测
 #define OPEN_NET_MEM_CHECK 1
 // log输出最低等级
-#define NET_UV_L_MIN_LEVEL NET_UV_L_INFO
+#define NET_UV_L_DEFAULT_LEVEL NET_UV_L_INFO
 
 #else
 
@@ -25,7 +25,7 @@
 // 开启内存检测
 #define OPEN_NET_MEM_CHECK 0
 // log输出最低等级
-#define NET_UV_L_MIN_LEVEL NET_UV_L_ERROR
+#define NET_UV_L_DEFAULT_LEVEL NET_UV_L_ERROR
 
 #endif
 

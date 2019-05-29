@@ -43,7 +43,7 @@ void printMemInfo();
 
 #define printMemInfo() ((void) 0) 
 
-#define NET_UV_LOG(level, format, ...) ((void) 0) 
+#define NET_UV_LOG(level, format, ...) net_uvLog(level, format, ##__VA_ARGS__)
 
 #endif // !OPEN_NET_UV_DEBUG
 
@@ -63,6 +63,9 @@ void printMemInfo();
 
 //日志输出
 void net_uvLog(int32_t level, const char* format, ...);
+
+// 设置日志输出等级
+void net_setLogLevel(int32_t level);
 
 //设置日志输出函数
 void setNetUVLogPrintFunc(void(*func)(int32_t, const char*));

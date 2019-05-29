@@ -4,6 +4,8 @@
 
 void main()
 {
+	net_uv::net_setLogLevel(NET_UV_L_WARNING);
+
 	VPNConfig cfg;
 	if (!cfg.initWithFile(g_vpnConfigFile))
 	{

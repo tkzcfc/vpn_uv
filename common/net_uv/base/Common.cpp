@@ -9,6 +9,7 @@ NS_NET_UV_BEGIN
 
 typedef void(*uvOutputLoggerType)(int32_t, const char*);
 uvOutputLoggerType uvOutputLogger = 0;
+int32_t uvLoggerLevel = NET_UV_L_DEFAULT_LEVEL;
 
 
 static const char* net_uv_log_name[NET_UV_L_FATAL + 1] =
@@ -22,7 +23,7 @@ static const char* net_uv_log_name[NET_UV_L_FATAL + 1] =
 
 void net_uvLog(int32_t level, const char* format, ...)
 {
-	if (level < NET_UV_L_MIN_LEVEL)
+	if (level < uvLoggerLevel)
 	{
 		return;
 	}
@@ -34,19 +35,19 @@ void net_uvLog(int32_t level, const char* format, ...)
 	vsnprintf(buf, sizeof(buf), format, args);
 	va_end(args);
 
-	std::string str = net_getTime();
-	str.append("[NET-UV]-[");
-	str.append(net_uv_log_name[level]);
-	str.append("] ");
-	str.append(buf);
-	str.append("\n");
-	if (uvOutputLogger == NULL)
+	if (uvOutputLogger != NULL)
 	{
-		printf("%s", str.c_str());
+		uvOutputLogger(level, buf);
 	}
 	else
 	{
-		uvOutputLogger(level, buf);
+		std::string str = net_getTime();
+		str.append("[NET-UV]-[");
+		str.append(net_uv_log_name[level]);
+		str.append("] ");
+		str.append(buf);
+		str.append("\n");
+		printf("%s", str.c_str());
 	}
 
 	//va_list list;
@@ -54,6 +55,11 @@ void net_uvLog(int32_t level, const char* format, ...)
 	//vprintf(format, list);
 	//va_end(list);
 	//printf("\n");
+}
+
+void net_setLogLevel(int32_t level)
+{
+	uvLoggerLevel = level;
 }
 
 void setNetUVLogPrintFunc(void(*func)(int32_t, const char*))
