@@ -39,3 +39,5 @@ client/x64/
 server/Debug/
 server/Release/
 server/x64/
+vpn_uv.VC.db
+vpn_uv.VC.VC.opendb
