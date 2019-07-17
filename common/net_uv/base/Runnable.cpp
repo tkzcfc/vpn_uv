@@ -3,7 +3,6 @@
 NS_NET_UV_BEGIN
 
 Runnable::Runnable()
-	: m_thread(NULL)
 {
 }
 
@@ -13,24 +12,81 @@ Runnable::~Runnable()
 
 void Runnable::startThread()
 {
-	this->join();
-	m_thread = (uv_thread_t*)fc_malloc(sizeof(uv_thread_t));
-	uv_thread_create(m_thread, onThreadRun, this);
+	m_thread.create([](void* arg)
+	{
+		Runnable* runnable = (Runnable*)arg;
+		runnable->run();
+	}, this);
 }
 
 void Runnable::join()
 {
-	if (m_thread == NULL)
-		return;
-	uv_thread_join(m_thread);
-	fc_free(m_thread);
-	m_thread = NULL;
+	m_thread.join();
 }
 
-void Runnable::onThreadRun(void* arg)
+void Runnable::pushThreadMsg(NetThreadMsgType type, Session* session, char* data, uint32_t len)
 {
-	Runnable* runnable = (Runnable*)arg;
-	runnable->run();
+	NetThreadMsg msg;
+	msg.msgType = type;
+	msg.data = data;
+	msg.dataLen = len;
+	msg.pSession = session;
+
+	m_msgMutex.lock();
+	m_msgQue.push(msg);
+	m_msgMutex.unlock();
 }
+
+bool Runnable::getThreadMsg()
+{
+	if (m_msgMutex.trylock() != 0)
+	{
+		return false;
+	}
+
+	if (m_msgQue.empty())
+	{
+		m_msgMutex.unlock();
+		return false;
+	}
+
+	while (!m_msgQue.empty())
+	{
+		m_msgDispatchQue.push(m_msgQue.front());
+		m_msgQue.pop();
+	}
+	m_msgMutex.unlock();
+
+	return true;
+}
+
+void Runnable::startIdle()
+{
+	m_idle.start(&m_loop, [](uv_idle_t* handle)
+	{
+		Runnable* self = (Runnable*)handle->data;
+		self->onIdleRun();
+	}, this);
+}
+
+void Runnable::stopIdle()
+{
+	m_idle.stop();
+}
+
+void Runnable::startTimerUpdate(uint32_t time)
+{
+	m_updateTimer.start(&m_loop, [](uv_timer_t* handle)
+	{
+		Runnable* svr = (Runnable*)handle->data;
+		svr->onTimerUpdateRun();
+	}, time, time, this);
+}
+
+void Runnable::stopTimerUpdate()
+{
+	m_updateTimer.stop();
+}
+
 
 NS_NET_UV_END

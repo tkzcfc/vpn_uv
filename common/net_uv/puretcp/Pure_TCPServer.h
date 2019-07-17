@@ -55,7 +55,7 @@ protected:
 	/// Server
 	virtual void onIdleRun()override;
 
-	virtual void onSessionUpdateRun()override;
+	virtual void onTimerUpdateRun()override;
 	
 protected:
 

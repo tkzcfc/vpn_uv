@@ -7,6 +7,8 @@
 #include "../base/Session.h"
 #include "../base/SessionManager.h"
 #include "../base/Mutex.h"
+#include "../base/Thread.h"
+#include "../base/Loop.h"
 #include "../base/Client.h"
 #include "../base/Server.h"
 #include "../kcp/KCPClient.h"

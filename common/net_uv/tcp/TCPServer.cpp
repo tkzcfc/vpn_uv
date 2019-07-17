@@ -39,15 +39,12 @@ bool TCPServer::startServer(const char* ip, uint32_t port, bool isIPV6, int32_t 
 
 	Server::startServer(ip, port, isIPV6, maxCount);
 
-	int32_t r = uv_loop_init(&m_loop);
-	CHECK_UV_ASSERT(r);
-
 	m_server = (TCPSocket*)fc_malloc(sizeof(TCPSocket));
 	if (m_server == NULL)
 	{
 		return false;
 	}
-	new (m_server) TCPSocket(&m_loop);
+	new (m_server) TCPSocket(m_loop.ptr());
 	m_server->setCloseCallback(std::bind(&TCPServer::onServerSocketClose, this, std::placeholders::_1));
 	m_server->setNewConnectionCallback(std::bind(&TCPServer::onNewConnect, this, std::placeholders::_1, std::placeholders::_2));
 
@@ -96,23 +93,10 @@ bool TCPServer::stopServer()
 
 void TCPServer::updateFrame()
 {
-	if (m_msgMutex.trylock() != 0)
+	if (!getThreadMsg())
 	{
 		return;
 	}
-
-	if (m_msgQue.empty())
-	{
-		m_msgMutex.unlock();
-		return;
-	}
-	
-	while (!m_msgQue.empty())
-	{
-		m_msgDispatchQue.push(m_msgQue.front());
-		m_msgQue.pop();
-	}
-	m_msgMutex.unlock();
 
 	bool closeServerTag = false;
 	while (!m_msgDispatchQue.empty())
@@ -174,15 +158,15 @@ void TCPServer::disconnect(uint32_t sessionID)
 void TCPServer::run()
 {
 	startIdle();
-	startSessionUpdate(TCP_HEARTBEAT_TIMER_DELAY);
+	startTimerUpdate(TCP_HEARTBEAT_TIMER_DELAY);
 
-	uv_run(&m_loop, UV_RUN_DEFAULT);
+	m_loop.run(UV_RUN_DEFAULT);
 
 	m_server->~TCPSocket();
 	fc_free(m_server);
 	m_server = NULL;
 	
-	uv_loop_close(&m_loop);
+	m_loop.close();
 	
 	m_serverStage = ServerStage::STOP;
 	pushThreadMsg(NetThreadMsgType::EXIT_LOOP, NULL);
@@ -231,9 +215,8 @@ void TCPServer::startFailureLogic()
 	fc_free(m_server);
 	m_server = NULL;
 
-	uv_run(&m_loop, UV_RUN_DEFAULT);
-
-	uv_loop_close(&m_loop);
+	m_loop.run(UV_RUN_DEFAULT);
+	m_loop.close();
 
 	m_serverStage = ServerStage::STOP;
 }
@@ -339,7 +322,7 @@ void TCPServer::executeOperation()
 			m_server->disconnect();
 			m_serverStage = ServerStage::WAIT_CLOSE_SERVER_SOCKET;
 
-			stopSessionUpdate();
+			stopTimerUpdate();
 		}break;
 		default:
 			break;
@@ -392,7 +375,7 @@ void TCPServer::onIdleRun()
 		if (m_allSession.empty())
 		{
 			stopIdle();
-			uv_stop(&m_loop);
+			m_loop.stop();
 		}
 	}
 	break;
@@ -402,7 +385,7 @@ void TCPServer::onIdleRun()
 	ThreadSleep(1);
 }
 
-void TCPServer::onSessionUpdateRun()
+void TCPServer::onTimerUpdateRun()
 {
 	for (auto& it : m_allSession)
 	{

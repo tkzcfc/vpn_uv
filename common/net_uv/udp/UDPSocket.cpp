@@ -179,11 +179,13 @@ void UDPSocket::uv_on_after_read(uv_udp_t* handle, ssize_t nread, const uv_buf_t
 	if (nread < 0)
 	{
 		NET_UV_LOG(NET_UV_L_ERROR, "udp read error %s\n", uv_err_name(nread));
+		uv_on_free_buffer((uv_handle_t*)handle, buf);
 		return;
 	}
 	if (addr == NULL)
 	{
 		//NET_UV_LOG(NET_UV_L_ERROR, "addr is null");
+		uv_on_free_buffer((uv_handle_t*)handle, buf);
 		return;
 	}
 
@@ -192,6 +194,7 @@ void UDPSocket::uv_on_after_read(uv_udp_t* handle, ssize_t nread, const uv_buf_t
 		UDPSocket* s = (UDPSocket*)handle->data;
 		s->m_readCall(handle, nread, buf, addr, flags);
 	}
+	uv_on_free_buffer((uv_handle_t*)handle, buf);
 }
 
 NS_NET_UV_END

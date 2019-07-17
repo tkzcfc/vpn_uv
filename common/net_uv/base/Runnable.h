@@ -1,6 +1,10 @@
 #pragma once
 
 #include "Common.h"
+#include "Loop.h"
+#include "Thread.h"
+#include "Mutex.h"
+#include "../common/NetUVThreadMsg.h"
 
 NS_NET_UV_BEGIN
 
@@ -15,18 +19,44 @@ public:
 
 	void join();
 
-	virtual void run() = 0;
-
 	inline void* getUserData();
 
 	inline void setUserData(void* userData);
 
 protected:
 
-	static void onThreadRun(void* arg);
+	virtual void run() = 0;
+
+	virtual void onIdleRun() = 0;
+
+	virtual void onTimerUpdateRun() = 0;
 
 protected:
-	uv_thread_t* m_thread;
+	void startIdle();
+
+	void stopIdle();
+
+	void startTimerUpdate(uint32_t time);
+
+	void stopTimerUpdate();
+
+	virtual void pushThreadMsg(NetThreadMsgType type, Session* session, char* data = NULL, uint32_t len = 0);
+
+	bool getThreadMsg();
+
+protected:
+
+	// 线程消息
+	Mutex m_msgMutex;
+	std::queue<NetThreadMsg> m_msgQue;
+	std::queue<NetThreadMsg> m_msgDispatchQue;
+
+	UVLoop m_loop;
+	UVIdle m_idle;
+	UVTimer m_updateTimer;
+
+	Thread m_thread;
+
 	void* m_userData;
 };
 

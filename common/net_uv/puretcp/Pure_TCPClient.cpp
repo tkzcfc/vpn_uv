@@ -33,15 +33,15 @@ Pure_TCPClient::Pure_TCPClient()
 	, m_keepAliveDelay(10)
 	, m_isStop(false)
 {
-	uv_loop_init(&m_loop);
-	
 	m_clientStage = clientStage::START;
 	
 	startIdle();
 
-	uv_timer_init(&m_loop, &m_clientUpdateTimer);
-	m_clientUpdateTimer.data = this;
-	uv_timer_start(&m_clientUpdateTimer, uv_client_update_timer_run, (uint64_t)100, (uint64_t)100);
+	m_clientUpdateTimer.start(&m_loop, [](uv_timer_t* handle)
+	{
+		Pure_TCPClient* c = (Pure_TCPClient*)handle->data;
+		c->onClientUpdate();
+	}, (uint64_t)100, (uint64_t)100, this);
 
 	this->startThread();
 }
@@ -80,23 +80,10 @@ void Pure_TCPClient::closeClient()
 
 void Pure_TCPClient::updateFrame()
 {
-	if (m_msgMutex.trylock() != 0)
+	if (!getThreadMsg())
 	{
 		return;
 	}
-
-	if (m_msgQue.empty())
-	{
-		m_msgMutex.unlock();
-		return;
-	}
-
-	while (!m_msgQue.empty())
-	{
-		m_msgDispatchQue.push(m_msgQue.front());
-		m_msgQue.pop();
-	}
-	m_msgMutex.unlock();
 
 	bool closeClientTag = false;
 	while (!m_msgDispatchQue.empty())
@@ -219,9 +206,8 @@ bool Pure_TCPClient::setSocketKeepAlive(int32_t enable, uint32_t delay)
 /// Runnable
 void Pure_TCPClient::run()
 {
-	uv_run(&m_loop, UV_RUN_DEFAULT);
-
-	uv_loop_close(&m_loop);
+	m_loop.run(UV_RUN_DEFAULT);
+	m_loop.close();
 
 	m_clientStage = clientStage::STOP;
 
@@ -309,7 +295,7 @@ void Pure_TCPClient::executeOperation()
 		case Pure_TCP_CLI_OP_CLIENT_CLOSE://¿Í»§¶Ë¹Ø±Õ
 		{
 			m_clientStage = clientStage::CLEAR_SESSION;
-			stopSessionUpdate();
+			stopTimerUpdate();
 		}break;
 		case Pure_TCP_CLI_OP_REMOVE_SESSION:
 		{
@@ -356,7 +342,7 @@ void Pure_TCPClient::onIdleRun()
 	ThreadSleep(1);
 }
 
-void Pure_TCPClient::onSessionUpdateRun()
+void Pure_TCPClient::onTimerUpdateRun()
 {}
 
 /// TCPClient
@@ -459,7 +445,7 @@ void Pure_TCPClient::createNewConnect(void* data)
 	else
 	{
 		TCPSocket* socket = (TCPSocket*)fc_malloc(sizeof(TCPSocket));
-		new (socket) TCPSocket(&m_loop); 
+		new (socket) TCPSocket(m_loop.ptr()); 
 		socket->setConnectCallback(std::bind(&Pure_TCPClient::onSocketConnect, this, std::placeholders::_1, std::placeholders::_2));
 
 		Pure_TCPSession* session = Pure_TCPSession::createSession(this, socket);
@@ -599,16 +585,10 @@ void Pure_TCPClient::onClientUpdate()
 	else if (m_clientStage == clientStage::WAIT_EXIT)
 	{
 		stopIdle();
-		uv_timer_stop(&m_clientUpdateTimer);
-		uv_stop(&m_loop);
+		m_clientUpdateTimer.stop();
+		m_loop.stop();
 	}
 }
 
-////////////////////////////////////////////////////////////////////////////////////////////////////
-void Pure_TCPClient::uv_client_update_timer_run(uv_timer_t* handle)
-{
-	Pure_TCPClient* c = (Pure_TCPClient*)handle->data;
-	c->onClientUpdate();
-}
 
 NS_NET_UV_END

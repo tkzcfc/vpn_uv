@@ -7,14 +7,14 @@ NS_NET_UV_BEGIN
 using P2PPeerStartCallback = std::function<void(bool isSuccess)>;
 using P2PPeerNewConnectCallback = std::function<void(uint64_t key)>;
 // 0 找不到目标  1 成功 2 超时  3该节点已经作为客户端连接到本节点
-using P2PPeerConnectToPeerCallback = std::function<void(uint64_t key, int status)>;  
+using P2PPeerConnectToPeerCallback = std::function<void(uint64_t key, int32_t status)>;
 using P2PPeerConnectToTurnCallback = std::function<void(bool isSuccess, uint64_t selfKey)>;
 using P2PPeerDisConnectToPeerCallback = std::function<void(uint64_t key)>;
 using P2PPeerDisConnectToTurnCallback = std::function<void()>;
 using P2PPeerRecvCallback = std::function<void(uint64_t key, char* data, uint32_t len)>;
 using P2PPeerCloseCallback = std::function<void()>;
 
-class P2PPeer : public Runnable
+class P2PPeer
 {
 public:
 
@@ -56,8 +56,7 @@ public:
 
 
 protected:
-	/// Runnable
-	virtual void run()override;
+	void run();
 
 	void onIdleRun();
 
@@ -95,12 +94,6 @@ protected:
 
 protected:
 
-	static void uv_on_idle_run(uv_idle_t* handle);
-
-	static void uv_on_timer_run(uv_timer_t* handle);
-
-protected:
-
 	P2PPipe m_pipe;
 
 	enum PeerState
@@ -110,10 +103,13 @@ protected:
 		WILL_STOP,
 	};
 	PeerState m_state;
-	uv_loop_t m_loop;
-	uv_idle_t m_idle;
-	uv_timer_t m_timer;
-	
+
+	Thread m_thread;
+
+	UVLoop m_loop;
+	UVIdle m_idle;
+	UVTimer m_timer;
+
 	std::string m_turnIP;
 	uint32_t m_turnPort;
 	AddrInfo m_turnAddrInfo;

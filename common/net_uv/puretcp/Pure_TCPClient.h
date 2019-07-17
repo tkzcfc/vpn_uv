@@ -59,7 +59,7 @@ protected:
 	/// Client
 	virtual void onIdleRun()override;
 
-	virtual void onSessionUpdateRun()override;
+	virtual void onTimerUpdateRun()override;
 
 	/// Pure_TCPClient
 	void onSocketConnect(Socket* socket, int32_t status);
@@ -79,7 +79,7 @@ protected:
 	void onClientUpdate();
 
 protected:
-	uv_timer_t m_clientUpdateTimer;
+	UVTimer m_clientUpdateTimer;
 
 	bool m_enableNoDelay;	
 	int32_t m_enableKeepAlive; 
@@ -89,9 +89,6 @@ protected:
 	std::map<uint32_t, clientSessionData*> m_allSessionMap;
 	
 	bool m_isStop;
-protected:
-
-	static void uv_client_update_timer_run(uv_timer_t* handle);
 };
 NS_NET_UV_END
 

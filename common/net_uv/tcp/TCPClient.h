@@ -75,7 +75,7 @@ protected:
 	/// Client
 	virtual void onIdleRun()override;
 
-	virtual void onSessionUpdateRun()override;
+	virtual void onTimerUpdateRun()override;
 
 	/// TCPClient
 	void onSocketConnect(Socket* socket, int32_t status);
@@ -95,7 +95,7 @@ protected:
 	void onClientUpdate();
 
 protected:
-	uv_timer_t m_clientUpdateTimer;
+	UVTimer m_clientUpdateTimer;
 
 	bool m_reconnect;		// 是否自动断线重连
 	float m_totalTime;		// 断线重连时间
@@ -107,9 +107,6 @@ protected:
 	std::map<uint32_t, clientSessionData*> m_allSessionMap;
 	
 	bool m_isStop;
-protected:
-
-	static void uv_client_update_timer_run(uv_timer_t* handle);
 };
 NS_NET_UV_END
 

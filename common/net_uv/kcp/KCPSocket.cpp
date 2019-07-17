@@ -774,11 +774,13 @@ void KCPSocket::uv_on_after_read(uv_udp_t* handle, ssize_t nread, const uv_buf_t
 	if (nread < 0)
 	{
 		NET_UV_LOG(NET_UV_L_ERROR, "udp read error %s\n", uv_err_name(nread));
+		uv_on_free_buffer((uv_handle_t*)handle, buf);
 		return;
 	}
 	if (addr == NULL)
 	{
 		//NET_UV_LOG(NET_UV_L_ERROR, "addr is null");
+		uv_on_free_buffer((uv_handle_t*)handle, buf);
 		return;
 	}
 
@@ -787,6 +789,7 @@ void KCPSocket::uv_on_after_read(uv_udp_t* handle, ssize_t nread, const uv_buf_t
 		KCPSocket* s = (KCPSocket*)handle->data;
 		s->onUdpRead(handle, nread, buf, addr, flags);
 	}
+	uv_on_free_buffer((uv_handle_t*)handle, buf);
 }
 
 int32_t KCPSocket::udp_output(const char *buf, int32_t len, ikcpcb *kcp, void *user)

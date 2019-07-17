@@ -63,16 +63,16 @@ KCPClient::KCPClient()
 	, m_totalTime(3.0f)
 	, m_isStop(false)
 {
-	uv_loop_init(&m_loop);
-
 	m_clientStage = clientStage::START;
 
 	startIdle();
-	startSessionUpdate(KCP_HEARTBEAT_TIMER_DELAY);
+	startTimerUpdate(KCP_HEARTBEAT_TIMER_DELAY);
 
-	uv_timer_init(&m_loop, &m_clientUpdateTimer);
-	m_clientUpdateTimer.data = this;
-	uv_timer_start(&m_clientUpdateTimer, uv_client_update_timer_run, (uint64_t)(KCP_CLIENT_TIMER_DELAY * 1000), (uint64_t)(KCP_CLIENT_TIMER_DELAY * 1000));
+	m_clientUpdateTimer.start(&m_loop, [](uv_timer_t* handle)
+	{
+		KCPClient* c = (KCPClient*)handle->data;
+		c->onClientUpdate();
+	}, (uint64_t)(KCP_CLIENT_TIMER_DELAY * 1000), (uint64_t)(KCP_CLIENT_TIMER_DELAY * 1000), this);
 
 	this->startThread();
 }
@@ -111,23 +111,10 @@ void KCPClient::closeClient()
 
 void KCPClient::updateFrame()
 {
-	if (m_msgMutex.trylock() != 0)
+	if (!getThreadMsg())
 	{
 		return;
 	}
-
-	if (m_msgQue.empty())
-	{
-		m_msgMutex.unlock();
-		return;
-	}
-
-	while (!m_msgQue.empty())
-	{
-		m_msgDispatchQue.push(m_msgQue.front());
-		m_msgQue.pop();
-	}
-	m_msgMutex.unlock();
 
 	bool closeClientTag = false;
 	while (!m_msgDispatchQue.empty())
@@ -289,9 +276,8 @@ void KCPClient::setAutoReconnectTimeBySessionID(uint32_t sessionID, float time)
 /// Runnable
 void KCPClient::run()
 {
-	uv_run(&m_loop, UV_RUN_DEFAULT);
-
-	uv_loop_close(&m_loop);
+	m_loop.run(UV_RUN_DEFAULT);
+	m_loop.close();
 
 	m_clientStage = clientStage::STOP;
 
@@ -405,7 +391,7 @@ void KCPClient::executeOperation()
 		case KCP_CLI_OP_CLIENT_CLOSE://¿Í»§¶Ë¹Ø±Õ
 		{
 			m_clientStage = clientStage::CLEAR_SESSION;
-			stopSessionUpdate();
+			stopTimerUpdate();
 		}break;
 		case KCP_CLI_OP_REMOVE_SESSION:
 		{
@@ -459,7 +445,7 @@ void KCPClient::onIdleRun()
 	ThreadSleep(1);
 }
 
-void KCPClient::onSessionUpdateRun()
+void KCPClient::onTimerUpdateRun()
 {
 	for (auto& it : m_allSessionMap)
 	{
@@ -565,7 +551,7 @@ void KCPClient::createNewConnect(void* data)
 	else
 	{
 		KCPSocket* socket = socket = (KCPSocket*)fc_malloc(sizeof(KCPSocket));
-		new (socket) KCPSocket(&m_loop);
+		new (socket) KCPSocket(m_loop.ptr());
 		socket->setConnectCallback(std::bind(&KCPClient::onSocketConnect, this, std::placeholders::_1, std::placeholders::_2));
 
 		KCPSession* session = KCPSession::createSession(this, socket);
@@ -752,16 +738,9 @@ void KCPClient::onClientUpdate()
 	else if (m_clientStage == clientStage::WAIT_EXIT)
 	{
 		stopIdle();
-		uv_timer_stop(&m_clientUpdateTimer);
-		uv_stop(&m_loop);
+		m_clientUpdateTimer.stop();
+		m_loop.stop();
 	}
-}
-
-////////////////////////////////////////////////////////////////////////////////////////////////////
-void KCPClient::uv_client_update_timer_run(uv_timer_t* handle)
-{
-	KCPClient* c = (KCPClient*)handle->data;
-	c->onClientUpdate();
 }
 
 NS_NET_UV_END

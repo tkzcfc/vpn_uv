@@ -41,10 +41,6 @@ P2PPeer::P2PPeer()
 	, m_disConnectToTurnCallback(nullptr)
 	, m_recvCallback(nullptr)
 {
-	memset(&m_loop, 0, sizeof(m_loop));
-	memset(&m_idle, 0, sizeof(m_idle));
-	memset(&m_timer, 0, sizeof(m_timer));
-
 	m_pipe.setRecvJsonCallback(std::bind(&P2PPeer::onPipeRecvJsonCallback, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3, std::placeholders::_4));
 	m_pipe.setRecvKcpCallback(std::bind(&P2PPeer::onPipeRecvKcpCallback, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3, std::placeholders::_4));
 	m_pipe.setNewSessionCallback(std::bind(&P2PPeer::onPipeNewSessionCallback, this, std::placeholders::_1));
@@ -55,7 +51,7 @@ P2PPeer::P2PPeer()
 P2PPeer::~P2PPeer()
 {
 	stop();
-	this->join();
+	m_thread.join();
 }
 
 bool P2PPeer::start(const char* ip, uint32_t port)
@@ -74,9 +70,7 @@ bool P2PPeer::start(const char* ip, uint32_t port)
 	assert(m_recvCallback != nullptr);
 	assert(m_closeCallback != nullptr);
 
-	uv_loop_init(&m_loop);
-
-	if (m_pipe.bind("0.0.0.0", 0, &m_loop) == false)
+	if (m_pipe.bind("0.0.0.0", 0, m_loop.ptr()) == false)
 	{
 		startFailureLogic();
 		return false;
@@ -87,7 +81,11 @@ bool P2PPeer::start(const char* ip, uint32_t port)
 
 	restartConnectTurn();
 
-	startThread();
+	m_thread.create([](void* arg) 
+	{
+		P2PPeer* self = (P2PPeer*)arg;
+		self->run();
+	}, this);
 	return true;
 }
 
@@ -249,16 +247,18 @@ void P2PPeer::run()
 
 	fc_free(turnAddr);
 
-	uv_idle_init(&m_loop, &m_idle);
-	m_idle.data = this;
-	uv_idle_start(&m_idle, P2PPeer::uv_on_idle_run);
+	m_idle.start(&m_loop, [](uv_idle_t* handle)
+	{
+		((P2PPeer*)handle->data)->onIdleRun();
+	}, this);
 
-	uv_timer_init(&m_loop, &m_timer);
-	m_timer.data = this;
-	uv_timer_start(&m_timer, P2PPeer::uv_on_timer_run, 200, 200);
+	m_timer.start(&m_loop, [](uv_timer_t* handle)
+	{
+		((P2PPeer*)handle->data)->onTimerRun();
+	}, 200, 200, this);
 
-	uv_run(&m_loop, UV_RUN_DEFAULT);
-	uv_loop_close(&m_loop);
+	m_loop.run(UV_RUN_DEFAULT);
+	m_loop.close();
 
 	m_state = PeerState::STOP;
 	clearData();
@@ -275,8 +275,8 @@ void P2PPeer::onIdleRun()
 	if (m_state == PeerState::WILL_STOP)
 	{
 		m_pipe.close();
-		uv_timer_stop(&m_timer);
-		uv_idle_stop(&m_idle);
+		m_timer.stop();
+		m_idle.stop();
 	}
 
 	ThreadSleep(1);
@@ -330,8 +330,8 @@ void P2PPeer::onTimerRun()
 void P2PPeer::startFailureLogic()
 {
 	m_pipe.close();
-	uv_run(&m_loop, UV_RUN_DEFAULT);
-	uv_loop_close(&m_loop);
+	m_loop.run(UV_RUN_DEFAULT);
+	m_loop.close();
 	m_state = PeerState::STOP;
 }
 
@@ -776,16 +776,6 @@ void P2PPeer::getLocalAddressIPV4Info(std::vector<LocNetAddrInfo>& infoArr)
 		}
 	}
 	uv_free_interface_addresses(info, count);
-}
-
-void P2PPeer::uv_on_idle_run(uv_idle_t* handle)
-{
-	((P2PPeer*)handle->data)->onIdleRun();
-}
-
-void P2PPeer::uv_on_timer_run(uv_timer_t* handle)
-{
-	((P2PPeer*)handle->data)->onTimerRun();
 }
 
 NS_NET_UV_END

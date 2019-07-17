@@ -5,9 +5,6 @@ NS_NET_UV_BEGIN
 P2PTurn::P2PTurn()
 	: m_state(TurnState::STOP)
 {
-	memset(&m_loop, 0, sizeof(m_loop));
-	memset(&m_idle, 0, sizeof(m_idle));
-
 	m_pipe.setRecvJsonCallback(std::bind(&P2PTurn::onPipeRecvJsonCallback, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3, std::placeholders::_4));
 	m_pipe.setRecvKcpCallback(std::bind(&P2PTurn::onPipeRecvKcpCallback, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3, std::placeholders::_4));
 	m_pipe.setNewSessionCallback(std::bind(&P2PTurn::onPipeNewSessionCallback, this, std::placeholders::_1));
@@ -18,7 +15,7 @@ P2PTurn::P2PTurn()
 P2PTurn::~P2PTurn()
 {
 	stop();
-	this->join();
+	m_thread.join();
 }
 
 bool P2PTurn::start(const char* ip, uint32_t port)
@@ -28,17 +25,19 @@ bool P2PTurn::start(const char* ip, uint32_t port)
 		return false;
 	}
 	
-	uv_loop_init(&m_loop);
-
-	if (m_pipe.bind(ip, port, &m_loop) == false)
+	if (m_pipe.bind(ip, port, m_loop.ptr()) == false)
 	{
-		uv_run(&m_loop, UV_RUN_DEFAULT);
-		uv_loop_close(&m_loop);
+		m_loop.run(UV_RUN_DEFAULT);
+		m_loop.close();
 		return false;
 	}
 	m_state = TurnState::START;
 
-	startThread();
+	m_thread.create([](void* arg) 
+	{
+		P2PTurn* self = (P2PTurn*)arg;
+		self->run();
+	}, this);
 
 	return true;
 }
@@ -51,13 +50,14 @@ void P2PTurn::stop()
 /// Runnable
 void P2PTurn::run()
 {
-	uv_idle_init(&m_loop, &m_idle);
-	m_idle.data = this;
-	uv_idle_start(&m_idle, P2PTurn::uv_on_idle_run);
+	m_idle.start(&m_loop, [](uv_idle_t* handle)
+	{
+		((P2PTurn*)handle->data)->onIdleRun();
+	}, this);
+		
+	m_loop.run(UV_RUN_DEFAULT);
+	m_loop.close();
 	
-	uv_run(&m_loop, UV_RUN_DEFAULT);
-	uv_loop_close(&m_loop);
-
 	m_state = TurnState::STOP;
 }
 
@@ -67,7 +67,7 @@ void P2PTurn::onIdleRun()
 	if (m_state == TurnState::WILL_STOP)
 	{
 		m_pipe.close();
-		uv_idle_stop(&m_idle);
+		m_idle.stop();
 	}
 	ThreadSleep(1);
 }
@@ -229,11 +229,6 @@ void P2PTurn::onPipeRemoveSessionCallback(uint64_t key)
 	{
 		m_key_peerDataMap.erase(it);
 	}
-}
-
-void P2PTurn::uv_on_idle_run(uv_idle_t* handle)
-{
-	((P2PTurn*)handle->data)->onIdleRun();
 }
 
 NS_NET_UV_END

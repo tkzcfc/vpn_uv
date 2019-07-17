@@ -131,6 +131,7 @@ void VPNClient::on_tcp_ServerRecvCall(Server* svr, Session* session, char* data,
 					ver_ret.VER = 0x5;
 					ver_ret.METHOD = 0xff;
 					session->send((char*)&ver_ret, sizeof(ver_ret));
+					printf("no support socket%d\n", ver_data.VER);
 				}
 				else
 				{
@@ -143,6 +144,7 @@ void VPNClient::on_tcp_ServerRecvCall(Server* svr, Session* session, char* data,
 							ver_ret.VER = 0x5;
 							ver_ret.METHOD = 0xff;
 							session->send((char*)&ver_ret, sizeof(ver_ret));
+							printf("no support method%d\n", ver_data.METHODS[i]);
 							return;
 						}
 					}

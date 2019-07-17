@@ -61,19 +61,19 @@ TCPClient::TCPClient()
 	, m_enableKeepAlive(false)
 	, m_keepAliveDelay(10)
 	, m_isStop(false)
-{
-	uv_loop_init(&m_loop);
-	
+{	
 	m_clientStage = clientStage::START;
 	
 	startIdle();
-	startSessionUpdate(TCP_HEARTBEAT_TIMER_DELAY);
+	startTimerUpdate(TCP_HEARTBEAT_TIMER_DELAY);
 
-	uv_timer_init(&m_loop, &m_clientUpdateTimer);
-	m_clientUpdateTimer.data = this;
-	uv_timer_start(&m_clientUpdateTimer, uv_client_update_timer_run, (uint64_t)(TCP_CLIENT_TIMER_DELAY * 1000), (uint64_t)(TCP_CLIENT_TIMER_DELAY * 1000));
+	m_clientUpdateTimer.start(&m_loop, [](uv_timer_t* handle)
+	{
+		TCPClient* c = (TCPClient*)handle->data;
+		c->onClientUpdate();
+	}, (uint64_t)(TCP_CLIENT_TIMER_DELAY * 1000), (uint64_t)(TCP_CLIENT_TIMER_DELAY * 1000), this);
 
-	this->startThread();
+	startThread();
 }
 
 TCPClient::~TCPClient()
@@ -110,23 +110,10 @@ void TCPClient::closeClient()
 
 void TCPClient::updateFrame()
 {
-	if (m_msgMutex.trylock() != 0)
+	if (!getThreadMsg())
 	{
 		return;
 	}
-
-	if (m_msgQue.empty())
-	{
-		m_msgMutex.unlock();
-		return;
-	}
-
-	while (!m_msgQue.empty())
-	{
-		m_msgDispatchQue.push(m_msgQue.front());
-		m_msgQue.pop();
-	}
-	m_msgMutex.unlock();
 
 	bool closeClientTag = false;
 	while (!m_msgDispatchQue.empty())
@@ -317,9 +304,8 @@ void TCPClient::setAutoReconnectTimeBySessionID(uint32_t sessionID, float time)
 /// Runnable
 void TCPClient::run()
 {
-	uv_run(&m_loop, UV_RUN_DEFAULT);
-
-	uv_loop_close(&m_loop);
+	m_loop.run(UV_RUN_DEFAULT);
+	m_loop.close();
 
 	m_clientStage = clientStage::STOP;
 
@@ -455,7 +441,7 @@ void TCPClient::executeOperation()
 		case TCP_CLI_OP_CLIENT_CLOSE://¿Í»§¶Ë¹Ø±Õ
 		{
 			m_clientStage = clientStage::CLEAR_SESSION;
-			stopSessionUpdate();
+			stopTimerUpdate();
 		}break;
 		case TCP_CLI_OP_REMOVE_SESSION:
 		{
@@ -502,7 +488,7 @@ void TCPClient::onIdleRun()
 	ThreadSleep(1);
 }
 
-void TCPClient::onSessionUpdateRun()
+void TCPClient::onTimerUpdateRun()
 {
 	for (auto& it : m_allSessionMap)
 	{
@@ -610,7 +596,7 @@ void TCPClient::createNewConnect(void* data)
 	else
 	{
 		TCPSocket* socket = (TCPSocket*)fc_malloc(sizeof(TCPSocket));
-		new (socket) TCPSocket(&m_loop); 
+		new (socket) TCPSocket(m_loop.ptr()); 
 		socket->setConnectCallback(std::bind(&TCPClient::onSocketConnect, this, std::placeholders::_1, std::placeholders::_2));
 
 		TCPSession* session = TCPSession::createSession(this, socket);
@@ -797,16 +783,11 @@ void TCPClient::onClientUpdate()
 	else if (m_clientStage == clientStage::WAIT_EXIT)
 	{
 		stopIdle();
-		uv_timer_stop(&m_clientUpdateTimer);
-		uv_stop(&m_loop);
+
+		m_clientUpdateTimer.stop();
+		m_loop.stop();
 	}
 }
 
-////////////////////////////////////////////////////////////////////////////////////////////////////
-void TCPClient::uv_client_update_timer_run(uv_timer_t* handle)
-{
-	TCPClient* c = (TCPClient*)handle->data;
-	c->onClientUpdate();
-}
 
 NS_NET_UV_END

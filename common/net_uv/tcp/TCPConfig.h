@@ -19,7 +19,7 @@ NS_NET_UV_BEGIN
 
 // 单次消息发送最大字节
 // 若超过该长度，则进行分片发送
-#define TCP_WRITE_MAX_LEN (1300)
+#define TCP_WRITE_MAX_LEN (1400)
 
 // 最大连接数
 #define TCP_MAX_CONNECT (0xFFFF)

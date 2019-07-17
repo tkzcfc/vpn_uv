@@ -38,15 +38,12 @@ bool Pure_TCPServer::startServer(const char* ip, uint32_t port, bool isIPV6, int
 
 	Server::startServer(ip, port, isIPV6, maxCount);
 
-	int32_t r = uv_loop_init(&m_loop);
-	CHECK_UV_ASSERT(r);
-
 	m_server = (TCPSocket*)fc_malloc(sizeof(TCPSocket));
 	if (m_server == NULL)
 	{
 		return false;
 	}
-	new (m_server) TCPSocket(&m_loop);
+	new (m_server) TCPSocket(m_loop.ptr());
 	m_server->setCloseCallback(std::bind(&Pure_TCPServer::onServerSocketClose, this, std::placeholders::_1));
 	m_server->setNewConnectionCallback(std::bind(&Pure_TCPServer::onNewConnect, this, std::placeholders::_1, std::placeholders::_2));
 
@@ -95,23 +92,10 @@ bool Pure_TCPServer::stopServer()
 
 void Pure_TCPServer::updateFrame()
 {
-	if (m_msgMutex.trylock() != 0)
+	if (!getThreadMsg())
 	{
 		return;
 	}
-
-	if (m_msgQue.empty())
-	{
-		m_msgMutex.unlock();
-		return;
-	}
-	
-	while (!m_msgQue.empty())
-	{
-		m_msgDispatchQue.push(m_msgQue.front());
-		m_msgQue.pop();
-	}
-	m_msgMutex.unlock();
 
 	bool closeServerTag = false;
 	while (!m_msgDispatchQue.empty())
@@ -168,13 +152,13 @@ void Pure_TCPServer::run()
 {
 	startIdle();
 
-	uv_run(&m_loop, UV_RUN_DEFAULT);
+	m_loop.run(UV_RUN_DEFAULT);
 
 	m_server->~TCPSocket();
 	fc_free(m_server);
 	m_server = NULL;
 	
-	uv_loop_close(&m_loop);
+	m_loop.close();
 	
 	m_serverStage = ServerStage::STOP;
 	pushThreadMsg(NetThreadMsgType::EXIT_LOOP, NULL);
@@ -220,9 +204,8 @@ void Pure_TCPServer::startFailureLogic()
 	fc_free(m_server);
 	m_server = NULL;
 
-	uv_run(&m_loop, UV_RUN_DEFAULT);
-
-	uv_loop_close(&m_loop);
+	m_loop.run(UV_RUN_DEFAULT);
+	m_loop.close();
 
 	m_serverStage = ServerStage::STOP;
 }
@@ -328,7 +311,7 @@ void Pure_TCPServer::executeOperation()
 			m_server->disconnect();
 			m_serverStage = ServerStage::WAIT_CLOSE_SERVER_SOCKET;
 
-			stopSessionUpdate();
+			stopTimerUpdate();
 		}break;
 		default:
 			break;
@@ -381,7 +364,7 @@ void Pure_TCPServer::onIdleRun()
 		if (m_allSession.empty())
 		{
 			stopIdle();
-			uv_stop(&m_loop);
+			m_loop.stop();
 		}
 	}
 	break;
@@ -391,7 +374,7 @@ void Pure_TCPServer::onIdleRun()
 	ThreadSleep(1);
 }
 
-void Pure_TCPServer::onSessionUpdateRun()
+void Pure_TCPServer::onTimerUpdateRun()
 {}
 
 NS_NET_UV_END

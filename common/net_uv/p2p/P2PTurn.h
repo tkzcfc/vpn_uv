@@ -6,7 +6,7 @@ NS_NET_UV_BEGIN
 
 #define PEER_LOCAL_ADDR_INFO_MAX_COUNT 3
 
-class P2PTurn : public Runnable
+class P2PTurn
 {
 public:
 
@@ -21,8 +21,7 @@ public:
 	void stop();
 
 protected:
-	/// Runnable
-	virtual void run()override;
+	void run();
 
 	void onIdleRun();
 
@@ -35,11 +34,7 @@ protected:
 	void onPipeNewKcpCreateCallback(uint64_t key);
 	
 	void onPipeRemoveSessionCallback(uint64_t key);
-
-protected:
-
-	static void uv_on_idle_run(uv_idle_t* handle);
-
+	
 protected:
 	P2PPipe m_pipe;
 
@@ -50,8 +45,10 @@ protected:
 		WILL_STOP,
 	};
 	TurnState m_state;
-	uv_loop_t m_loop;
-	uv_idle_t m_idle;
+
+	UVLoop m_loop;
+	UVIdle m_idle;
+	Thread m_thread;
 
 	struct PeerData
 	{

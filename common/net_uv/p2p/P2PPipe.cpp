@@ -195,14 +195,14 @@ void P2PPipe::heartCheck(uint32_t interval)
 	{
 		if (it->second.isStartCheck)
 		{
-			if (it->second.noResponseCount > 10)
+			if (it->second.noResponseCount > 5)
 			{
 				onSessionRemove(it);
 				it = m_allSessionDataMap.erase(it);
 			}
 			else
 			{
-				if (m_updateTime - it->second.lastCheckTime > 1500)
+				if (m_updateTime - it->second.lastCheckTime >= 1000)
 				{
 					it->second.noResponseCount++;
 					send(P2PMessageID::P2P_MSG_ID_PING, s.GetString(), s.GetLength(), (const struct sockaddr*)&it->second.send_addr);

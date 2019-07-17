@@ -146,36 +146,6 @@
     <ClCompile Include="..\common\libuv\src\win\async.c">
       <Filter>common\libuv\src\win</Filter>
     </ClCompile>
-    <ClCompile Include="..\common\net_uv\base\Common.cpp">
-      <Filter>common\net_uv\base</Filter>
-    </ClCompile>
-    <ClCompile Include="..\common\net_uv\base\md5.cpp">
-      <Filter>common\net_uv\base</Filter>
-    </ClCompile>
-    <ClCompile Include="..\common\net_uv\base\Misc.cpp">
-      <Filter>common\net_uv\base</Filter>
-    </ClCompile>
-    <ClCompile Include="..\common\net_uv\base\Mutex.cpp">
-      <Filter>common\net_uv\base</Filter>
-    </ClCompile>
-    <ClCompile Include="..\common\net_uv\base\Runnable.cpp">
-      <Filter>common\net_uv\base</Filter>
-    </ClCompile>
-    <ClCompile Include="..\common\net_uv\base\Server.cpp">
-      <Filter>common\net_uv\base</Filter>
-    </ClCompile>
-    <ClCompile Include="..\common\net_uv\base\Session.cpp">
-      <Filter>common\net_uv\base</Filter>
-    </ClCompile>
-    <ClCompile Include="..\common\net_uv\base\SessionManager.cpp">
-      <Filter>common\net_uv\base</Filter>
-    </ClCompile>
-    <ClCompile Include="..\common\net_uv\base\Socket.cpp">
-      <Filter>common\net_uv\base</Filter>
-    </ClCompile>
-    <ClCompile Include="..\common\net_uv\base\Client.cpp">
-      <Filter>common\net_uv\base</Filter>
-    </ClCompile>
     <ClCompile Include="..\common\net_uv\kcp\KCPServer.cpp">
       <Filter>common\net_uv\kcp</Filter>
     </ClCompile>
@@ -227,9 +197,6 @@
     <ClCompile Include="main.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="..\common\net_uv\base\DNSCache.cpp">
-      <Filter>common\net_uv\base</Filter>
-    </ClCompile>
     <ClCompile Include="..\common\rc4.c">
       <Filter>common</Filter>
     </ClCompile>
@@ -256,6 +223,42 @@
     </ClCompile>
     <ClCompile Include="..\common\VPNConfig.cpp">
       <Filter>common</Filter>
+    </ClCompile>
+    <ClCompile Include="..\common\net_uv\base\Loop.cpp">
+      <Filter>common\net_uv\base</Filter>
+    </ClCompile>
+    <ClCompile Include="..\common\net_uv\base\md5.cpp">
+      <Filter>common\net_uv\base</Filter>
+    </ClCompile>
+    <ClCompile Include="..\common\net_uv\base\Misc.cpp">
+      <Filter>common\net_uv\base</Filter>
+    </ClCompile>
+    <ClCompile Include="..\common\net_uv\base\Mutex.cpp">
+      <Filter>common\net_uv\base</Filter>
+    </ClCompile>
+    <ClCompile Include="..\common\net_uv\base\Runnable.cpp">
+      <Filter>common\net_uv\base</Filter>
+    </ClCompile>
+    <ClCompile Include="..\common\net_uv\base\Server.cpp">
+      <Filter>common\net_uv\base</Filter>
+    </ClCompile>
+    <ClCompile Include="..\common\net_uv\base\Session.cpp">
+      <Filter>common\net_uv\base</Filter>
+    </ClCompile>
+    <ClCompile Include="..\common\net_uv\base\SessionManager.cpp">
+      <Filter>common\net_uv\base</Filter>
+    </ClCompile>
+    <ClCompile Include="..\common\net_uv\base\Socket.cpp">
+      <Filter>common\net_uv\base</Filter>
+    </ClCompile>
+    <ClCompile Include="..\common\net_uv\base\Client.cpp">
+      <Filter>common\net_uv\base</Filter>
+    </ClCompile>
+    <ClCompile Include="..\common\net_uv\base\Common.cpp">
+      <Filter>common\net_uv\base</Filter>
+    </ClCompile>
+    <ClCompile Include="..\common\net_uv\base\DNSCache.cpp">
+      <Filter>common\net_uv\base</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -340,45 +343,6 @@
     <ClInclude Include="..\common\libuv\src\win\atomicops-inl.h">
       <Filter>common\libuv\src\win</Filter>
     </ClInclude>
-    <ClInclude Include="..\common\net_uv\base\Common.h">
-      <Filter>common\net_uv\base</Filter>
-    </ClInclude>
-    <ClInclude Include="..\common\net_uv\base\Config.h">
-      <Filter>common\net_uv\base</Filter>
-    </ClInclude>
-    <ClInclude Include="..\common\net_uv\base\Macros.h">
-      <Filter>common\net_uv\base</Filter>
-    </ClInclude>
-    <ClInclude Include="..\common\net_uv\base\md5.h">
-      <Filter>common\net_uv\base</Filter>
-    </ClInclude>
-    <ClInclude Include="..\common\net_uv\base\Misc.h">
-      <Filter>common\net_uv\base</Filter>
-    </ClInclude>
-    <ClInclude Include="..\common\net_uv\base\Mutex.h">
-      <Filter>common\net_uv\base</Filter>
-    </ClInclude>
-    <ClInclude Include="..\common\net_uv\base\Runnable.h">
-      <Filter>common\net_uv\base</Filter>
-    </ClInclude>
-    <ClInclude Include="..\common\net_uv\base\Server.h">
-      <Filter>common\net_uv\base</Filter>
-    </ClInclude>
-    <ClInclude Include="..\common\net_uv\base\Session.h">
-      <Filter>common\net_uv\base</Filter>
-    </ClInclude>
-    <ClInclude Include="..\common\net_uv\base\SessionManager.h">
-      <Filter>common\net_uv\base</Filter>
-    </ClInclude>
-    <ClInclude Include="..\common\net_uv\base\Socket.h">
-      <Filter>common\net_uv\base</Filter>
-    </ClInclude>
-    <ClInclude Include="..\common\net_uv\base\Buffer.h">
-      <Filter>common\net_uv\base</Filter>
-    </ClInclude>
-    <ClInclude Include="..\common\net_uv\base\Client.h">
-      <Filter>common\net_uv\base</Filter>
-    </ClInclude>
     <ClInclude Include="..\common\net_uv\common\NetHeart.h">
       <Filter>common\net_uv\common</Filter>
     </ClInclude>
@@ -445,9 +409,6 @@
     <ClInclude Include="..\common\VPNServer.h">
       <Filter>common</Filter>
     </ClInclude>
-    <ClInclude Include="..\common\net_uv\base\DNSCache.h">
-      <Filter>common\net_uv\base</Filter>
-    </ClInclude>
     <ClInclude Include="..\common\rc4.h">
       <Filter>common</Filter>
     </ClInclude>
@@ -480,6 +441,54 @@
     </ClInclude>
     <ClInclude Include="..\common\VPNConfig.h">
       <Filter>common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\common\net_uv\base\DNSCache.h">
+      <Filter>common\net_uv\base</Filter>
+    </ClInclude>
+    <ClInclude Include="..\common\net_uv\base\Loop.h">
+      <Filter>common\net_uv\base</Filter>
+    </ClInclude>
+    <ClInclude Include="..\common\net_uv\base\Macros.h">
+      <Filter>common\net_uv\base</Filter>
+    </ClInclude>
+    <ClInclude Include="..\common\net_uv\base\md5.h">
+      <Filter>common\net_uv\base</Filter>
+    </ClInclude>
+    <ClInclude Include="..\common\net_uv\base\Misc.h">
+      <Filter>common\net_uv\base</Filter>
+    </ClInclude>
+    <ClInclude Include="..\common\net_uv\base\Mutex.h">
+      <Filter>common\net_uv\base</Filter>
+    </ClInclude>
+    <ClInclude Include="..\common\net_uv\base\Runnable.h">
+      <Filter>common\net_uv\base</Filter>
+    </ClInclude>
+    <ClInclude Include="..\common\net_uv\base\Server.h">
+      <Filter>common\net_uv\base</Filter>
+    </ClInclude>
+    <ClInclude Include="..\common\net_uv\base\Session.h">
+      <Filter>common\net_uv\base</Filter>
+    </ClInclude>
+    <ClInclude Include="..\common\net_uv\base\SessionManager.h">
+      <Filter>common\net_uv\base</Filter>
+    </ClInclude>
+    <ClInclude Include="..\common\net_uv\base\Socket.h">
+      <Filter>common\net_uv\base</Filter>
+    </ClInclude>
+    <ClInclude Include="..\common\net_uv\base\Thread.h">
+      <Filter>common\net_uv\base</Filter>
+    </ClInclude>
+    <ClInclude Include="..\common\net_uv\base\Buffer.h">
+      <Filter>common\net_uv\base</Filter>
+    </ClInclude>
+    <ClInclude Include="..\common\net_uv\base\Client.h">
+      <Filter>common\net_uv\base</Filter>
+    </ClInclude>
+    <ClInclude Include="..\common\net_uv\base\Common.h">
+      <Filter>common\net_uv\base</Filter>
+    </ClInclude>
+    <ClInclude Include="..\common\net_uv\base\Config.h">
+      <Filter>common\net_uv\base</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

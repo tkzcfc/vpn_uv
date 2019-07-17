@@ -301,9 +301,11 @@ void TCPSocket::uv_on_after_read(uv_stream_t *handle, ssize_t nread, const uv_bu
 	if (nread <= 0) 
 	{
 		s->disconnect();
+		uv_on_free_buffer((uv_handle_t*)handle, buf);
 		return;
 	}
 	s->m_recvCall(buf->base, nread);
+	uv_on_free_buffer((uv_handle_t*)handle, buf);
 }
 
 void TCPSocket::uv_on_after_write(uv_write_t* req, int32_t status)
