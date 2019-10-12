@@ -296,7 +296,7 @@ void TCPSession::update(uint32_t time)
 			if (m_curHeartCount > m_curHeartMaxCount)
 			{
 				m_curHeartCount = m_resetHeartCount;
-				//NET_UV_LOG(NET_UV_L_INFO, "无心跳回复，断开连接");
+				NET_UV_LOG(NET_UV_L_INFO, "无心跳回复，断开连接");
 				executeDisconnect();
 			}
 			else

@@ -263,6 +263,7 @@ void KCPSession::onRecvMsgPackage(char* data, uint32_t len, NET_HEART_TYPE type)
 
 void KCPSession::update(uint32_t time)
 {
+#if KCP_OPEN_UV_THREAD_HEARTBEAT == 1
 	if (!isOnline())
 		return;
 
@@ -288,6 +289,7 @@ void KCPSession::update(uint32_t time)
 			}
 		}
 	}
+#endif
 }
 
 void KCPSession::updateKcp(IUINT32 update_clock)

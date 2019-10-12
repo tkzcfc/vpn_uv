@@ -43,10 +43,10 @@ NS_NET_UV_BEGIN
 #define KCP_OPEN_UV_THREAD_HEARTBEAT 1
 
 
-#define KCP_HEARTBEAT_TIMER_DELAY (400)		// 心跳检测定时器间隔
-#define KCP_HEARTBEAT_CHECK_DELAY (1600)	// 心跳检测时间
-#define KCP_HEARTBEAT_MAX_COUNT_SERVER 3	// 心跳不回复最大次数(服务端)
-#define KCP_HEARTBEAT_MAX_COUNT_CLIENT 3	// 心跳不回复最大次数(客户端)
+#define KCP_HEARTBEAT_TIMER_DELAY (1000)		// 心跳检测定时器间隔
+#define KCP_HEARTBEAT_CHECK_DELAY (2000)	// 心跳检测时间
+#define KCP_HEARTBEAT_MAX_COUNT_SERVER 15	// 心跳不回复最大次数(服务端)
+#define KCP_HEARTBEAT_MAX_COUNT_CLIENT 10	// 心跳不回复最大次数(客户端)
 
 // 心跳次数计数重置值(服务端) 小于0 
 // 当服务端该值比客户端小时，心跳请求一般由客户端发送，服务端进行回复

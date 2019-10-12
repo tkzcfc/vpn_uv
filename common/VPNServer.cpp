@@ -100,6 +100,7 @@ void VPNServer::on_ClientConnectCall(Client* client, Session* session, int32_t s
 
 void VPNServer::on_ClientDisconnectCall(Client* client, Session* session)
 {
+	printf("disconnect to %s\n", session->getIp().c_str());
 	client->removeSession(session->getSessionID());
 }
 
