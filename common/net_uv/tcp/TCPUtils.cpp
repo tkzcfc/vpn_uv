@@ -44,15 +44,23 @@ char* tcp_uv_decode(const char* data, uint32_t len, uint32_t &outLen)
 {
 	outLen = 0;
 
-	MD5 M;
-
 	int32_t datalen = len - tcp_uv_hashlen;
 
+	if (datalen <= 0)
+	{
+		return NULL;
+	}
+
 	char* p = (char*)fc_malloc(datalen + tcp_uv_encodeKeyLen + 1);
+	if (p == NULL)
+	{
+		return NULL;
+	}
 
 	memcpy(p, data + tcp_uv_hashlen, datalen);
 	memcpy(p + datalen, tcp_uv_encodeKey, tcp_uv_encodeKeyLen);
 
+	MD5 M;
 	M.reset();
 	M.update(p, datalen + tcp_uv_encodeKeyLen);
 
