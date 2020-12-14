@@ -1,8 +1,13 @@
 #pragma once
 
-#include "VPNPipe.h"
-#include <unordered_map>
 #include "Socks5Msg.h"
+#include "net_uv.h"
+#include "Cypher.h"
+#include <unordered_map>
+#include <memory>
+#include <time.h>
+
+NS_NET_UV_OPEN;
 
 class VPNServer
 {
@@ -11,15 +16,15 @@ public:
 
 	~VPNServer();
 
-	bool start(const char* ip, uint32_t port);
+	bool start();
 
 	void stop(const std::function<void()>& stopCall);
 
-	void updateFrame();
-
 protected:
 
-	void tryCallStop();
+	void updateFrame();
+
+	void clsLogic();
 
 	/// client
 	void on_ClientConnectCall(Client* client, Session* session, int32_t status);
@@ -33,20 +38,47 @@ protected:
 	void on_ClientRemoveSessionCall(Client* client, Session* session);
 
 	/// pipe
-	void on_pipeRecvCallback(char* data, uint32_t len);
+	void on_pipeCloseCall(Server* svr);
+
+	void on_pipeNewConnectCall(Server* svr, Session* session);
+	
+	void on_pipeRecvCall(Server* svr, Session* session, char* data, uint32_t len);
+	
+	void on_pipeDisconnectCall(Server* svr, Session* session);
+
+	void on_pipeRecvMsgCallback(Session*, char* data, uint32_t len);
+
+	void clear();
+
+	void removeSessionData(uint32_t sessionID);
+
+	void resizeSendBuffer(uint32_t len);
+
+	void resizeRecvBuffer(uint32_t len);
 
 protected:
 
-	std::unique_ptr<Pure_TCPClient> m_client;
-	std::unique_ptr<VPNPipe> m_pipe;
-	uint32_t m_clientUniqueSessionID;
+	std::unique_ptr<TCPClient> m_client;
+	std::unique_ptr<Server> m_pipe;
+	std::unique_ptr<Cypher> m_cypher;
 
-	// key : 本地客户端连接远程地址的sessionID
-	// value : 客户端传输过来的sessionID
-	std::unordered_map<uint32_t, uint32_t> m_sessionIDMap;
-
-	bool m_clientStop;
-	bool m_pipeStop;
+	RUN_STATUS m_runStatus;
 	std::function<void()> m_stopCall;
+	UVLoop m_loop;
+	UVTimer m_update;
+	UVTimer m_clsTimer;
+
+	char* m_sendBuffer;
+	uint32_t m_sendBufLen;
+	char* m_recvBuffer;
+	uint32_t m_recvBufLen;
+
+	struct SessionData
+	{
+		Buffer* buf;
+		UDPSocket* udp;
+		uint64_t timestamp;
+	};
+	std::unordered_map<uint32_t, SessionData> m_sessionDataMap;
 };
 

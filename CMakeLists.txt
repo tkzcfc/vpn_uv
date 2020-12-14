@@ -4,46 +4,53 @@ cmake_minimum_required(VERSION 3.2)
 # project name
 PROJECT(vpn_uv)
 
-add_subdirectory("common/snappy")
+add_subdirectory("ThirdParty/snappy")
+add_subdirectory("ThirdParty/net_uv")
+add_subdirectory("ThirdParty/libuv")
 
-# head file path
-INCLUDE_DIRECTORIES(
-common
-common/libuv/
-common/libuv/include
-common/libuv/src
-)
+macro(add_console name)
+    project(${name})
 
-AUX_SOURCE_DIRECTORY(common/libuv/src LIB_UV_DIR_SRCS)
+    set(_Example_Sources
+        ${ARGN}
+    )
 
-if(MSVC)
-	AUX_SOURCE_DIRECTORY(common/libuv/src/win LIB_UV_PLATFORM_DIR_SRCS)
-else()
-	AUX_SOURCE_DIRECTORY(common/libuv/src/unix LIB_UV_PLATFORM_DIR_SRCS)
-endif()
+    source_group("" FILES ${_Example_Sources})
+    source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR} FILES ${_Example_Sources})
 
-AUX_SOURCE_DIRECTORY(common/net_uv/base NET_UV_BASE_DIR_SRCS)
-AUX_SOURCE_DIRECTORY(common/net_uv/kcp NET_UV_KCP_DIR_SRCS)
-AUX_SOURCE_DIRECTORY(common/net_uv/puretcp LIB_UV_PURETCP__DIR_SRCS)
-AUX_SOURCE_DIRECTORY(common/net_uv/tcp NET_UV_TCP_DIR_SRCS)
-AUX_SOURCE_DIRECTORY(common/net_uv/udp NET_UV_UDP_DIR_SRCS)
+    add_executable(${name} ${_Example_Sources})
 
-AUX_SOURCE_DIRECTORY(common COMMON_DIR_SRCS)
+    target_link_libraries(${name} PRIVATE common libuv net_uv snappy)
 
-AUX_SOURCE_DIRECTORY(server DIR_SRCS)
+    set(_ExampleBinDir ${CMAKE_BINARY_DIR}/Bin)
 
-SET(VPN_UV_SRCS
-${LIB_UV_DIR_SRCS}
-${LIB_UV_PLATFORM_DIR_SRCS}
-${NET_UV_BASE_DIR_SRCS}
-${NET_UV_KCP_DIR_SRCS}
-${LIB_UV_PURETCP__DIR_SRCS}
-${NET_UV_TCP_DIR_SRCS}
-${NET_UV_UDP_DIR_SRCS}
-${COMMON_DIR_SRCS}
-${DIR_SRCS}
-)
+    set_target_properties(${name} PROPERTIES
+        FOLDER "Apps"
+        RUNTIME_OUTPUT_DIRECTORY                "${_ExampleBinDir}"
+        RUNTIME_OUTPUT_DIRECTORY_DEBUG          "${_ExampleBinDir}"
+        RUNTIME_OUTPUT_DIRECTORY_RELWITHDEBINFO "${_ExampleBinDir}"
+        RUNTIME_OUTPUT_DIRECTORY_MINSIZEREL     "${_ExampleBinDir}"
+        RUNTIME_OUTPUT_DIRECTORY_RELEASE        "${_ExampleBinDir}"
+        DEBUG_POSTFIX                           _d
+        RELWITHDEBINGO_POSTFIX                  _rd
+        MINSIZEREL_POSTFIX                      _r
+        VS_DEBUGGER_WORKING_DIRECTORY           ${_ExampleBinDir}
+        #MACOSX_BUNDLE_INFO_PLIST                "${CMAKE_SOURCE_DIR}/Apps/Common/Support/Info.plist.in"
+        #MACOSX_BUNDLE_BUNDLE_NAME               "${PACKAGE_NAME}"
+        #MACOSX_BUNDLE_GUI_IDENTIFIER            "com.sandbox.collisions"
+        #MACOSX_BUNDLE_LONG_VERSION_STRING       "${PACKAGE_VERSION}"
+        #MACOSX_BUNDLE_SHORT_VERSION_STRING      "${PACKAGE_VERSION_MAJOR}.${PACKAGE_VERSION_MINOR}"
+        #MACOSX_BUNDLE_ICON_FILE                 Icon.icns
+    )
 
-ADD_EXECUTABLE(${PROJECT_NAME} ${VPN_UV_SRCS})
+    add_custom_command(
+        TARGET ${name}
+        PRE_BUILD
+        COMMAND ${CMAKE_COMMAND} -E make_directory ARGS ${_ExampleBinDir}
+    )
 
-TARGET_LINK_LIBRARIES(${PROJECT_NAME} snappy)
+endmacro()
+
+add_subdirectory("common")
+add_subdirectory("client")
+add_subdirectory("server")

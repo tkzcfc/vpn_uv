@@ -1,12 +1,14 @@
 #pragma once
 
-#include "net_uv/net_uv.h"
+#include "net_uv.h"
 
 class VPNConfig
 {
 public:
 	
 	VPNConfig();
+	
+	static VPNConfig* getInstance();
 
 	bool initWithFile(const std::string& configFile);
 	
@@ -16,11 +18,17 @@ public:
 	
 	int32_t getInt32(const char* key, int32_t defaultValue = 0);
 
+	uint32_t getUInt32(const char* key, uint32_t defaultValue = 0);
+
 	std::string getString(const char* key, const std::string& defaultValue = "");
+	
+	bool getBool(const char* key, bool defaultValue = false);
 
 protected:
 	rapidjson::Document m_document;
 	bool m_isInit;
+	
+	static VPNConfig* instance;
 };
 
 static const char* g_vpnConfigFile = "config.json";
@@ -29,5 +37,12 @@ static const char* g_vpnDefaultConfig = "{"
 "\"svr_listenIP\" : \"0.0.0.0\","
 "\"remoteIP\" : \"47.75.218.200\","
 "\"client_listenPort\" : 8527,"
-"\"svr_listenPort\" : 1002"
+"\"svr_listenPort\" : 1002,"
+"\"use_kcp\" : false,"
+"\"is_ipv6\" : false,"
+"\"encry_method\" : \"RC4\","
+"\"encry_key\" : \"key_abc\","
+"\"client_listenCount\" : 65535,"
+"\"svr_listenCount\" : 65535"
 "}";
+

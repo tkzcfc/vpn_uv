@@ -1,6 +1,23 @@
 #include "VPNConfig.h"
 
 
+VPNConfig* VPNConfig::instance = NULL;
+
+VPNConfig* VPNConfig::getInstance()
+{
+	if(instance == NULL)
+	{
+		instance = new VPNConfig();
+
+		if (!instance->initWithFile(g_vpnConfigFile))
+		{
+			printf("Unable to open configuration file '%s', using the default configuration \n\n%s\n\n", g_vpnConfigFile, g_vpnDefaultConfig);
+			instance->initWithContent(g_vpnDefaultConfig);
+		}
+	}
+	return instance;
+}
+	
 VPNConfig::VPNConfig()
 {
 	m_isInit = false;
@@ -86,6 +103,19 @@ int32_t VPNConfig::getInt32(const char* key, int32_t defaultValue)
 	return defaultValue;
 }
 
+uint32_t VPNConfig::getUInt32(const char* key, uint32_t defaultValue)
+{
+	if (m_document.HasMember(key))
+	{
+		rapidjson::Value& out_value = m_document[key];
+		if (out_value.IsUint())
+		{
+			return out_value.GetUint();
+		}
+	}
+	return defaultValue;
+}
+
 std::string VPNConfig::getString(const char* key, const std::string& defaultValue)
 {
 	if (m_document.HasMember(key))
@@ -94,6 +124,19 @@ std::string VPNConfig::getString(const char* key, const std::string& defaultValu
 		if (out_value.IsString())
 		{
 			return out_value.GetString();
+		}
+	}
+	return defaultValue;
+}
+
+bool VPNConfig::getBool(const char* key, bool defaultValue)
+{
+	if (m_document.HasMember(key))
+	{
+		rapidjson::Value& out_value = m_document[key];
+		if (out_value.IsBool())
+		{
+			return out_value.GetBool();
 		}
 	}
 	return defaultValue;
