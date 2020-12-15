@@ -74,6 +74,7 @@ bool VPNServer::start()
 	}, 1, 1, this);
 
 	m_loop.run(UV_RUN_DEFAULT);
+	m_loop.close();
 
 	if (m_stopCall != nullptr)
 	{
