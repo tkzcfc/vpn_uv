@@ -573,7 +573,7 @@ void VPNClient::on_pipeRecvMsgCallback(Session* session, char* data, uint32_t le
 	}break;
 	case S2C_DISCONNECT:
 	{
-		printf("recv S2C_DISCONNECT --->\n");
+		//printf("recv S2C_DISCONNECT --->\n");
 		goto error_disconnect;
 	}break;
 	case SEND_TCP_DATA:

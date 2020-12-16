@@ -253,7 +253,7 @@ void VPNServer::on_pipeRecvCall(Server* svr, Session* session, char* data, uint3
 
 				resizeRecvBuffer(totalLen);
 				recvBuf->pop(m_recvBuffer, totalLen);
-				
+
 				this->on_pipeRecvMsgCallback(session, m_recvBuffer, totalLen);
 			}break;
 			case SEND_TCP_DATA:
@@ -312,7 +312,6 @@ void VPNServer::on_pipeRecvCall(Server* svr, Session* session, char* data, uint3
 	return;
 
 error_disconnect:
-printf("error_disconnect---------- 111>\n");
 	m_client->disconnect(session->getSessionID());
 	m_pipe->disconnect(session->getSessionID());
 }
@@ -474,7 +473,6 @@ void VPNServer::on_pipeRecvMsgCallback(Session* session, char* data, uint32_t le
 	return;
 
 error_disconnect:
-	printf("error_disconnect---------->\n");
 	m_client->disconnect(session->getSessionID());
 	m_pipe->disconnect(session->getSessionID());
 }
