@@ -3,33 +3,6 @@
 #include "net_uv.h"
 #include "PipeMsg.h"
 
-#define TWO_CHAR_TO_SHORT(A, I) A = (((uint8_t)data[I]) << 8) | ((uint8_t)data[(I + 1)])
-
-uint32_t Utils::swap_endian(uint32_t val) 
-{
-	val = ((val << 8) & 0xFF00FF00) | ((val >> 8) & 0xFF00FF);
-	return (val << 16) | (val >> 16);
-}
-
-uint32_t Utils::IPtoINT(char* szIp)
-{
-	uint32_t nRet = 0;
-	if(szIp == NULL)
-		return nRet;
-
-    char* szBufTemp = NULL;
-    char* szBuf = strtok_s(szIp,".",&szBufTemp);
-
-    int i = 0;
-    while(NULL != szBuf)
-    {
-        nRet += atoi(szBuf) << ((3-i)*8);
-        szBuf = strtok_s(NULL,".",&szBufTemp);
-        i++;
-    }
-    return nRet;
-}
-
 uint32_t Utils::getNetAddrLen(char* data, uint32_t len)
 {
 	if (len < 7)
@@ -83,13 +56,6 @@ bool Utils::decodeNetAddr(char* data, uint32_t len, NetAddr& addr)
 		char szBuf[128] = { 0 };
 		::inet_ntop(AF_INET, data + 1, szBuf, sizeof(szBuf));
 		addr.ADDR = szBuf;
-		
-		//struct in_addr addrtmp;
-		//memcpy(&addrtmp, &data[1], 4);
-		//addr.ADDR = ::inet_ntoa(addrtmp);
-
-		//sprintf((char*)szBuf, "%u.%u.%u.%u", (uint8_t)data[1], (uint8_t)data[2], (uint8_t)data[3], (uint8_t)data[4]);
-		//addr.ADDR = szBuf;
 	}
 	// domain name
 	else if (ATYP == SOKS5_ATYP_DOMAIN)

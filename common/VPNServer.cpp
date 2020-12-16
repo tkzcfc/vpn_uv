@@ -251,13 +251,10 @@ void VPNServer::on_pipeRecvCall(Server* svr, Session* session, char* data, uint3
 				if(recvBuf->getDataLength() < totalLen)
 					return;
 
-				char* pMsg = (char*)malloc(totalLen);
-				if(pMsg == NULL)
-					goto error_disconnect;
-
-				recvBuf->pop(pMsg, totalLen);
-				this->on_pipeRecvMsgCallback(session, pMsg, totalLen);
-				free(pMsg);
+				resizeRecvBuffer(totalLen);
+				recvBuf->pop(m_recvBuffer, totalLen);
+				
+				this->on_pipeRecvMsgCallback(session, m_recvBuffer, totalLen);
 			}break;
 			case SEND_TCP_DATA:
 			{

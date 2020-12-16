@@ -6,7 +6,7 @@
 #define BLOCK_DATA_SIZE 1400
 
 
-// 
+// 管道消息类型
 enum PIPEMSG_TYPE
 {
 	C2S_REQUEST = 0xfefe,
@@ -18,7 +18,7 @@ enum PIPEMSG_TYPE
 	S2C_CANNOT_RESOLVE_ADDR,
 };
 
-// 
+// 加密方式
 enum EncryMethod
 {
 	BEGIN,

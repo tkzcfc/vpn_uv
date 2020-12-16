@@ -3,8 +3,6 @@
 #include "VPNConfig.h"
 #include "Utils.h"
 
-#define TWO_CHAR_TO_SHORT(A, I) A = (((uint8_t)data[I]) << 8) | ((uint8_t)data[(I + 1)])
-
 VPNClient::VPNClient()
 	: m_stopCall(nullptr)
 	, m_runStatus(RUN_STATUS::STOP)
@@ -153,6 +151,13 @@ void VPNClient::on_tcp_ServerRecvCall(Server* svr, Session* session, char* data,
 	{
 		if (len >= 3)
 		{
+			/*
+			 +----+----------+----------+
+	         |VER | NMETHODS | METHODS  |
+	         +----+----------+----------+
+	         | 1  |    1     | 1 to 255 |
+	         +----+----------+----------+
+           */
 			S5Msg_C2S_Verification ver_data;
 			memset(&ver_data, 0, sizeof(ver_data));
 			ver_data.VER = data[0];
