@@ -1,0 +1,12 @@
+{
+	"client_listenIP": "0.0.0.0",
+	"svr_listenIP": "0.0.0.0",
+	"remoteIP": "127.0.0.1",
+	"client_listenPort": 8527,
+	"svr_listenPort": 1004,
+	"use_kcp": false,
+	"encry_method": "RC4",
+	"encry_key": "12@#abca",
+	"username": "",
+	"password": ""
+}

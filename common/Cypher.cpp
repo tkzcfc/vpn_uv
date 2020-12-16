@@ -7,7 +7,7 @@ Cypher::Cypher(EncryMethod  method, const char* key, uint32_t keyLen)
 	m_cacheBuf = NULL;
 	m_cacheLen = 0;
 
-	if(m_keyLen == 0)
+	if(keyLen == 0)
 	{
 		const char* defaultKey = "12@#";
 

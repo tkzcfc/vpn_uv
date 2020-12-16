@@ -22,6 +22,7 @@ socks5 libuv
 
 - **client_listenIP :** 客户端监听地址
 - **client_listenPort :** 客户端监听端口
+- **remoteIP :** 远程服务器地址
 - **svr_listenIP :** 服务端监听地址
 - **svr_listenPort :** 服务器监听端口
 - **use_kcp :** 传输隧道是否使用kcp
