@@ -450,8 +450,6 @@ void VPNServer::on_pipeRecvMsgCallback(Session* session, char* data, uint32_t le
 		if (!Utils::decodeNetAddr(rawData + 3, addrLen, netAddr))
 			goto error_disconnect;
 
-		sessionData.timestamp = uv_now(m_loop.ptr());
-
 		uint32_t addr_len = 0;
 		struct sockaddr* addr = net_getsocketAddr(netAddr.ADDR.c_str(), netAddr.PORT, &addr_len);
 		if (addr == NULL)
