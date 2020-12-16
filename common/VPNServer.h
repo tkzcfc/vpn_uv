@@ -65,7 +65,9 @@ protected:
 	RUN_STATUS m_runStatus;
 	std::function<void()> m_stopCall;
 	UVLoop m_loop;
+	// 逻辑定时器
 	UVTimer m_update;
+	// 定时清理无效连接
 	UVTimer m_clsTimer;
 
 	char* m_sendBuffer;
