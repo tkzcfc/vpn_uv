@@ -1,9 +1,9 @@
-#include "VPNClient.h"
+#include "ProxyClient.h"
 #include "PipeMsg.h"
-#include "VPNConfig.h"
-#include "Utils.h"
+#include "ProxyConfig.h"
+#include "utils/Utils.h"
 
-VPNClient::VPNClient()
+ProxyClient::ProxyClient()
 	: m_stopCall(nullptr)
 	, m_runStatus(RUN_STATUS::STOP)
 	, m_sendBuffer(NULL)
@@ -12,27 +12,27 @@ VPNClient::VPNClient()
 	, m_recvBufLen(0)
 {}
 
-VPNClient::~VPNClient()
+ProxyClient::~ProxyClient()
 {
 	clear();
 }
 
-bool VPNClient::start()
+bool ProxyClient::start()
 {
 	assert(m_runStatus == RUN_STATUS::STOP);
 
-	std::string encryMethod = VPNConfig::getInstance()->getString("encry_method");
-	std::string encryKey = VPNConfig::getInstance()->getString("encry_key");
-	std::string localIP = VPNConfig::getInstance()->getString("client_listenIP");
-	std::string remoteIP = VPNConfig::getInstance()->getString("remoteIP");
-	uint32_t localPort = VPNConfig::getInstance()->getUInt32("client_listenPort");
-	uint32_t remotePort = VPNConfig::getInstance()->getUInt32("svr_listenPort");
-	uint32_t listenCount = VPNConfig::getInstance()->getUInt32("client_listenCount", 0xFFFF);
-	bool isipv6 = VPNConfig::getInstance()->getBool("is_ipv6", false);
-	bool useKcp = VPNConfig::getInstance()->getBool("use_kcp", false);
+	std::string encryMethod = ProxyConfig::getInstance()->getString("encry_method");
+	std::string encryKey = ProxyConfig::getInstance()->getString("encry_key");
+	std::string localIP = ProxyConfig::getInstance()->getString("client_listenIP");
+	std::string remoteIP = ProxyConfig::getInstance()->getString("remoteIP");
+	uint32_t localPort = ProxyConfig::getInstance()->getUInt32("client_listenPort");
+	uint32_t remotePort = ProxyConfig::getInstance()->getUInt32("svr_listenPort");
+	uint32_t listenCount = ProxyConfig::getInstance()->getUInt32("client_listenCount", 0xFFFF);
+	bool isipv6 = ProxyConfig::getInstance()->getBool("is_ipv6", false);
+	bool useKcp = ProxyConfig::getInstance()->getBool("use_kcp", false);
 
-	m_username = VPNConfig::getInstance()->getString("username");
-	m_password = VPNConfig::getInstance()->getString("password");
+	m_username = ProxyConfig::getInstance()->getString("username");
+	m_password = ProxyConfig::getInstance()->getString("password");
 
 	if(encryMethod == "RC4" && encryKey.empty())
 		return false;
@@ -44,10 +44,10 @@ bool VPNClient::start()
 	this->m_remotePort = remotePort;
 
 	m_tcpSvr = std::make_unique<TCPServer>();
-	m_tcpSvr->setCloseCallback(std::bind(&VPNClient::on_tcp_ServerCloseCall, this, std::placeholders::_1));
-	m_tcpSvr->setNewConnectCallback(std::bind(&VPNClient::on_tcp_ServerNewConnectCall, this, std::placeholders::_1, std::placeholders::_2));
-	m_tcpSvr->setRecvCallback(std::bind(&VPNClient::on_tcp_ServerRecvCall, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3, std::placeholders::_4));
-	m_tcpSvr->setDisconnectCallback(std::bind(&VPNClient::on_tcp_ServerDisconnectCall, this, std::placeholders::_1, std::placeholders::_2));
+	m_tcpSvr->setCloseCallback(std::bind(&ProxyClient::on_tcp_ServerCloseCall, this, std::placeholders::_1));
+	m_tcpSvr->setNewConnectCallback(std::bind(&ProxyClient::on_tcp_ServerNewConnectCall, this, std::placeholders::_1, std::placeholders::_2));
+	m_tcpSvr->setRecvCallback(std::bind(&ProxyClient::on_tcp_ServerRecvCall, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3, std::placeholders::_4));
+	m_tcpSvr->setDisconnectCallback(std::bind(&ProxyClient::on_tcp_ServerDisconnectCall, this, std::placeholders::_1, std::placeholders::_2));
 
 	if (!m_tcpSvr->startServer(localIP.c_str(), localPort, isipv6, listenCount))
 	{
@@ -68,16 +68,16 @@ bool VPNClient::start()
 		m_pipe = std::make_unique<TCPClient>();
 
 	m_pipe->setClientCloseCallback([=](Client*){});
-	m_pipe->setConnectCallback(std::bind(&VPNClient::on_pipeConnectCallback, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3));
-	m_pipe->setDisconnectCallback(std::bind(&VPNClient::on_pipeDisconnectCallback, this, std::placeholders::_1, std::placeholders::_2));
-	m_pipe->setRecvCallback(std::bind(&VPNClient::on_pipeRecvCallback, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3, std::placeholders::_4));
+	m_pipe->setConnectCallback(std::bind(&ProxyClient::on_pipeConnectCallback, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3));
+	m_pipe->setDisconnectCallback(std::bind(&ProxyClient::on_pipeDisconnectCallback, this, std::placeholders::_1, std::placeholders::_2));
+	m_pipe->setRecvCallback(std::bind(&ProxyClient::on_pipeRecvCallback, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3, std::placeholders::_4));
 	m_pipe->setRemoveSessionCallback([](Client*, Session* session) {});
 
 	m_runStatus = RUN_STATUS::RUN;
 
 	m_update.start(m_loop.ptr(), [](uv_timer_t* handle) 
 	{
-		auto self = (VPNClient*)handle->data;
+		auto self = (ProxyClient*)handle->data;
 		self->updateFrame();
 	}, 1, 1, this);
 	m_loop.run(UV_RUN_DEFAULT);
@@ -92,7 +92,7 @@ bool VPNClient::start()
 	return true;
 }
 
-void VPNClient::stop(const std::function<void()>& closeCall)
+void ProxyClient::stop(const std::function<void()>& closeCall)
 {
 	m_stopCall = closeCall;
 	if(m_runStatus == RUN_STATUS::RUN)
@@ -103,7 +103,7 @@ void VPNClient::stop(const std::function<void()>& closeCall)
 	}
 }
 
-void VPNClient::updateFrame()
+void ProxyClient::updateFrame()
 {
 	if(m_runStatus == RUN_STATUS::RUN)
 	{
@@ -124,10 +124,10 @@ void VPNClient::updateFrame()
 }
 
 /// svr
-void VPNClient::on_tcp_ServerCloseCall(Server* svr)
+void ProxyClient::on_tcp_ServerCloseCall(Server* svr)
 {}
 
-void VPNClient::on_tcp_ServerNewConnectCall(Server* svr, Session* session)
+void ProxyClient::on_tcp_ServerNewConnectCall(Server* svr, Session* session)
 {
 	SessionData data;
 	memset(&data, 0, sizeof(data));
@@ -135,7 +135,7 @@ void VPNClient::on_tcp_ServerNewConnectCall(Server* svr, Session* session)
 	m_sessionDataMap[session->getSessionID()] = data;
 }
 
-void VPNClient::on_tcp_ServerRecvCall(Server* svr, Session* session, char* data, uint32_t len)
+void ProxyClient::on_tcp_ServerRecvCall(Server* svr, Session* session, char* data, uint32_t len)
 {
 	auto it = m_sessionDataMap.find(session->getSessionID());
 	if (it == m_sessionDataMap.end())
@@ -358,14 +358,14 @@ void VPNClient::on_tcp_ServerRecvCall(Server* svr, Session* session, char* data,
 	}
 }
 
-void VPNClient::on_tcp_ServerDisconnectCall(Server* svr, Session* session)
+void ProxyClient::on_tcp_ServerDisconnectCall(Server* svr, Session* session)
 {
 	m_pipe->disconnect(session->getSessionID());
 	removeSessionData(session->getSessionID());
 }
 
 /// pipe
-void VPNClient::on_pipeRecvCallback(Client*, Session* session, char* data, uint32_t len)
+void ProxyClient::on_pipeRecvCallback(Client*, Session* session, char* data, uint32_t len)
 {
 	auto it = m_sessionDataMap.find(session->getSessionID());
 	if (m_sessionDataMap.end() == it)
@@ -462,7 +462,7 @@ error_disconnect:
 	m_pipe->disconnect(session->getSessionID());
 }
 
-void VPNClient::on_pipeRecvMsgCallback(Session* session, char* data, uint32_t len)
+void ProxyClient::on_pipeRecvMsgCallback(Session* session, char* data, uint32_t len)
 {
 	MSG_P_Base* msg = (MSG_P_Base*)data;
 	switch (msg->msgType)
@@ -642,14 +642,14 @@ error_disconnect:
 	m_pipe->disconnect(session->getSessionID());
 }
 
-void VPNClient::on_pipeDisconnectCallback(Client*, Session* session)
+void ProxyClient::on_pipeDisconnectCallback(Client*, Session* session)
 {
 	m_pipe->removeSession(session->getSessionID());
 	m_tcpSvr->disconnect(session->getSessionID());
 	removeSessionData(session->getSessionID());
 }
 
-void VPNClient::on_pipeConnectCallback(Client*, Session* session, int32_t status)
+void ProxyClient::on_pipeConnectCallback(Client*, Session* session, int32_t status)
 {
 	auto it = m_sessionDataMap.find(session->getSessionID());
 	if(m_sessionDataMap.end() == it)
@@ -697,7 +697,7 @@ void VPNClient::on_pipeConnectCallback(Client*, Session* session, int32_t status
 		m_pipe->removeSession(session->getSessionID());
 }
 
-void VPNClient::clear()
+void ProxyClient::clear()
 {
 	for(auto& it : m_sessionDataMap)
 	{
@@ -719,7 +719,7 @@ void VPNClient::clear()
 	m_recvBufLen = 0;
 }
 
-void VPNClient::removeSessionData(uint32_t sessionID)
+void ProxyClient::removeSessionData(uint32_t sessionID)
 {
 	auto it = m_sessionDataMap.find(sessionID);
 	if (m_sessionDataMap.end() != it)
@@ -732,7 +732,7 @@ void VPNClient::removeSessionData(uint32_t sessionID)
 	}
 }
 
-void VPNClient::resizeSendBuffer(uint32_t len)
+void ProxyClient::resizeSendBuffer(uint32_t len)
 {
 	if (m_sendBufLen < len)
 	{
@@ -743,7 +743,7 @@ void VPNClient::resizeSendBuffer(uint32_t len)
 	}
 }
 
-void VPNClient::resizeRecvBuffer(uint32_t len)
+void ProxyClient::resizeRecvBuffer(uint32_t len)
 {
 	if (m_recvBufLen < len)
 	{

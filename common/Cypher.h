@@ -3,7 +3,7 @@
 #include "PipeMsg.h"
 extern"C"
 {
-#include "rc4.h"
+#include "utils/rc4.h"
 }
 #include "snappy.h"
 

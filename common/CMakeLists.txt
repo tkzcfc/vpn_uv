@@ -2,19 +2,21 @@ project(common)
 
 set(LIB_COMMON_SRC
   PipeMsg.h
-  rc4.c
-  rc4.h
   Socks5Msg.h
-  Utils.cpp
-  Utils.h
+  utils/rc4.c
+  utils/rc4.h
+  utils/endian.c
+  utils/endian.h
+  utils/Utils.cpp
+  utils/Utils.h
   Cypher.cpp
   Cypher.h
-  VPNClient.cpp
-  VPNClient.h
-  VPNConfig.cpp
-  VPNConfig.h
-  VPNServer.cpp
-  VPNServer.h
+  ProxyClient.cpp
+  ProxyClient.h
+  ProxyConfig.cpp
+  ProxyConfig.h
+  ProxyServer.cpp
+  ProxyServer.h
 )
 
 add_library(${PROJECT_NAME} STATIC ${LIB_COMMON_SRC})

@@ -5,16 +5,15 @@
 #include "Cypher.h"
 #include <unordered_map>
 #include <memory>
-#include <time.h>
 
 NS_NET_UV_OPEN;
 
-class VPNServer
+class ProxyServer
 {
 public:
-	VPNServer();
+	ProxyServer();
 
-	~VPNServer();
+	~ProxyServer();
 
 	bool start();
 

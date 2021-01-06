@@ -1,4 +1,4 @@
-#include "VPNClient.h"
+#include "ProxyClient.h"
 #include <iostream>
 
 void main()
@@ -6,7 +6,7 @@ void main()
 	net_uv::net_setLogLevel(NET_UV_L_INFO);
 	net_uv::DNSCache::getInstance()->setEnable(true);
 
-	VPNClient* client = new VPNClient();
+	ProxyClient* client = new ProxyClient();
 	
 	if (!client->start())
 	{

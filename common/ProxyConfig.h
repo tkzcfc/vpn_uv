@@ -2,13 +2,13 @@
 
 #include "net_uv.h"
 
-class VPNConfig
+class ProxyConfig
 {
 public:
 	
-	VPNConfig();
+	ProxyConfig();
 	
-	static VPNConfig* getInstance();
+	static ProxyConfig* getInstance();
 
 	bool initWithFile(const std::string& configFile);
 	
@@ -28,7 +28,7 @@ protected:
 	rapidjson::Document m_document;
 	bool m_isInit;
 	
-	static VPNConfig* instance;
+	static ProxyConfig* instance;
 };
 
 static const char* g_vpnConfigFile = "config.json";

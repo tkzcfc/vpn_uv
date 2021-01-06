@@ -1,13 +1,13 @@
-#include "VPNConfig.h"
+#include "ProxyConfig.h"
 
 
-VPNConfig* VPNConfig::instance = NULL;
+ProxyConfig* ProxyConfig::instance = NULL;
 
-VPNConfig* VPNConfig::getInstance()
+ProxyConfig* ProxyConfig::getInstance()
 {
 	if(instance == NULL)
 	{
-		instance = new VPNConfig();
+		instance = new ProxyConfig();
 
 		if (!instance->initWithFile(g_vpnConfigFile))
 		{
@@ -18,12 +18,12 @@ VPNConfig* VPNConfig::getInstance()
 	return instance;
 }
 	
-VPNConfig::VPNConfig()
+ProxyConfig::ProxyConfig()
 {
 	m_isInit = false;
 }
 
-bool VPNConfig::initWithFile(const std::string& configFile)
+bool ProxyConfig::initWithFile(const std::string& configFile)
 {
 	if (m_isInit)
 	{
@@ -68,7 +68,7 @@ bool VPNConfig::initWithFile(const std::string& configFile)
 	return true;
 }
 
-bool VPNConfig::initWithContent(const std::string& config)
+bool ProxyConfig::initWithContent(const std::string& config)
 {
 	if (m_isInit)
 	{
@@ -85,12 +85,12 @@ bool VPNConfig::initWithContent(const std::string& config)
 	return true;
 }
 
-bool VPNConfig::isInit()
+bool ProxyConfig::isInit()
 {
 	return m_isInit;
 }
 
-int32_t VPNConfig::getInt32(const char* key, int32_t defaultValue)
+int32_t ProxyConfig::getInt32(const char* key, int32_t defaultValue)
 {
 	if (m_document.HasMember(key))
 	{
@@ -103,7 +103,7 @@ int32_t VPNConfig::getInt32(const char* key, int32_t defaultValue)
 	return defaultValue;
 }
 
-uint32_t VPNConfig::getUInt32(const char* key, uint32_t defaultValue)
+uint32_t ProxyConfig::getUInt32(const char* key, uint32_t defaultValue)
 {
 	if (m_document.HasMember(key))
 	{
@@ -116,7 +116,7 @@ uint32_t VPNConfig::getUInt32(const char* key, uint32_t defaultValue)
 	return defaultValue;
 }
 
-std::string VPNConfig::getString(const char* key, const std::string& defaultValue)
+std::string ProxyConfig::getString(const char* key, const std::string& defaultValue)
 {
 	if (m_document.HasMember(key))
 	{
@@ -129,7 +129,7 @@ std::string VPNConfig::getString(const char* key, const std::string& defaultValu
 	return defaultValue;
 }
 
-bool VPNConfig::getBool(const char* key, bool defaultValue)
+bool ProxyConfig::getBool(const char* key, bool defaultValue)
 {
 	if (m_document.HasMember(key))
 	{

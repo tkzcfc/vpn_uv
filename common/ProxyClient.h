@@ -8,13 +8,13 @@
 
 NS_NET_UV_OPEN;
 
-class VPNClient
+class ProxyClient
 {
 public:
 
-	VPNClient();
+	ProxyClient();
 
-	~VPNClient();
+	~ProxyClient();
 
 	bool start();
 
