@@ -6,7 +6,7 @@
 #define MSG_MAX_SIZE (1 << 18) // 256k
 #define BLOCK_DATA_SIZE 1400
 
-#define RECV_BUFFER_BLOCK_SIZE (1000)
+#define RECV_BUFFER_BLOCK_SIZE (1 << 14) // 16k
 
 enum S2C_RESPONSE_CODE : uint8_t
 {
@@ -150,61 +150,6 @@ public:
 	static int32_t resolvAddr(S5AddrInfo* info, uint8_t* data);
 };
 
-
-//
-//struct MSG_P_Base
-//{
-//	PIPEMSG_TYPE msgType;
-//};
-//
-//struct MSG_P_C2S_Request : public MSG_P_Base
-//{
-//	// 0x01 CONNECT
-//	// 0x02 BIND
-//	// 0x03 UDP
-//	uint8_t CMD;
-//	// 0x01 ipv4
-//	// 0x03 domain name
-//	// 0x04 ipv6
-//	uint8_t ATYP;
-//	uint16_t port;
-//	uint16_t len;
-//	// .ADDR
-//};
-//// 
-//struct MSG_P_S2C_Response : public MSG_P_Base
-//{
-//	// 0x00: tcp connect failed
-//	// 0x01: tcp connect succeeded
-//	// 0x02: tcp connect timed out
-//	// 0x03: udp ok
-//	// 0x04: udp fail
-//	uint8_t ret;
-//};
-//
-//struct MSG_P_TCP_Data : public MSG_P_Base
-//{
-//	uint32_t len;
-//	uint16_t method;
-//	// .DATA
-//};
-//
-//struct MSG_P_C2S_UDP_Data : MSG_P_TCP_Data
-//{
-//	// uint8_t FRAG;
-//	// uint8_t ATYP;
-//	// char[ATYP] .ADDR
-//	// uint16_t.PORT
-//	// .DATA
-//};
-//
-//struct MSG_P_S2C_UDP_Data : MSG_P_TCP_Data
-//{
-//	// uint8_t ATYP;
-//	// char[ATYP] .ADDR
-//	// uint16_t.PORT
-//	// .DATA
-//};
 
 enum RUN_STATUS
 {
