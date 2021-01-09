@@ -6,14 +6,16 @@
 ProxyClient::ProxyClient()
 	: m_stopCall(nullptr)
 	, m_runStatus(RUN_STATUS::STOP)
-	, m_sendBuffer(NULL)
-	, m_sendBufLen(0)
 	, m_recvBuffer(NULL)
 	, m_recvBufLen(0)
-{}
+{
+	m_sendBuffer = (uint8_t*)fc_malloc(MSG_MAX_SIZE);
+}
 
 ProxyClient::~ProxyClient()
 {
+	fc_free(m_sendBuffer);
+	stop(NULL);
 	clear();
 }
 
@@ -21,18 +23,20 @@ bool ProxyClient::start()
 {
 	assert(m_runStatus == RUN_STATUS::STOP);
 
-	std::string encryMethod = ProxyConfig::getInstance()->getString("encry_method");
-	std::string encryKey = ProxyConfig::getInstance()->getString("encry_key");
-	std::string localIP = ProxyConfig::getInstance()->getString("client_listenIP");
-	std::string remoteIP = ProxyConfig::getInstance()->getString("remoteIP");
-	uint32_t localPort = ProxyConfig::getInstance()->getUInt32("client_listenPort");
-	uint32_t remotePort = ProxyConfig::getInstance()->getUInt32("svr_listenPort");
-	uint32_t listenCount = ProxyConfig::getInstance()->getUInt32("client_listenCount", 0xFFFF);
-	bool isipv6 = ProxyConfig::getInstance()->getBool("is_ipv6", false);
-	bool useKcp = ProxyConfig::getInstance()->getBool("use_kcp", false);
+	auto cfg = ProxyConfig::getInstance();
 
-	m_username = ProxyConfig::getInstance()->getString("username");
-	m_password = ProxyConfig::getInstance()->getString("password");
+	std::string encryMethod = cfg->getString("encry_method");
+	std::string encryKey = cfg->getString("encry_key");
+	std::string localIP = cfg->getString("client_listenIP");
+	std::string remoteIP = cfg->getString("remoteIP");
+	uint32_t localPort = cfg->getUInt32("client_listenPort");
+	uint32_t remotePort = cfg->getUInt32("svr_listenPort");
+	uint32_t listenCount = cfg->getUInt32("client_listenCount", 0xFFFF);
+	bool isipv6 = cfg->getBool("is_ipv6", false);
+	bool useKcp = cfg->getBool("use_kcp", false);
+
+	m_username = cfg->getString("username");
+	m_password = cfg->getString("password");
 
 	if(encryMethod == "RC4" && encryKey.empty())
 		return false;
@@ -105,16 +109,10 @@ void ProxyClient::stop(const std::function<void()>& closeCall)
 
 void ProxyClient::updateFrame()
 {
-	if(m_runStatus == RUN_STATUS::RUN)
+	m_tcpSvr->updateFrame();
+	m_pipe->updateFrame();
+	if(m_runStatus == RUN_STATUS::STOP_ING)
 	{
-		m_tcpSvr->updateFrame();
-		m_pipe->updateFrame();
-	}
-	else if(m_runStatus = RUN_STATUS::STOP_ING)
-	{
-		m_tcpSvr->updateFrame();
-		m_pipe->updateFrame();
-
 		if(m_tcpSvr->isCloseFinish() && m_pipe->isCloseFinish())
 		{
 			clear();
@@ -149,72 +147,65 @@ void ProxyClient::on_tcp_ServerRecvCall(Server* svr, Session* session, char* dat
 	{
 	case SessionData::Verification:
 	{
-		if (len >= 3)
+		// +----+----------+----------+
+		// |VER | NMETHODS | METHODS  |
+		// +----+----------+----------+
+		// | 1  |    1     | 1 to 255 |
+		// +----+----------+----------+
+		if (len < 3)
 		{
-			/*
-			 +----+----------+----------+
-	         |VER | NMETHODS | METHODS  |
-	         +----+----------+----------+
-	         | 1  |    1     | 1 to 255 |
-	         +----+----------+----------+
-           */
-			S5Msg_C2S_Verification ver_data;
-			memset(&ver_data, 0, sizeof(ver_data));
-			ver_data.VER = data[0];
-			ver_data.NMETHODS = data[1];
-
-			for (int32_t i = 0; i < ver_data.NMETHODS; ++i)
-				ver_data.METHODS[i] = data[i + 2];
-			
-			// 只支持socks5
-			if (ver_data.VER != SOKS5_VERSION)
-			{
-				S5Msg_S2C_Verification ver_ret;
-				ver_ret.VER = SOKS5_VERSION;
-				ver_ret.METHOD = 0xff;
-				session->send((char*)&ver_ret, sizeof(ver_ret));
-				printf("no support socket%d\n", ver_data.VER);
-			}
-			else
-			{
-				for (int32_t i = 0; i < ver_data.NMETHODS; ++i)
-				{
-					if (ver_data.METHODS[i] == 0x0)
-					{
-						if (m_username.empty() && m_password.empty())
-						{
-							S5Msg_S2C_Verification ver_ret;
-							ver_ret.VER = SOKS5_VERSION;
-							ver_ret.METHOD = 0x00;
-							session->send((char*)&ver_ret, sizeof(ver_ret));
-							it->second.status = SessionData::Request;
-							return;
-						}
-					}
-					else if (ver_data.METHODS[i] == 0x02)
-					{
-						S5Msg_S2C_Verification ver_ret;
-						ver_ret.VER = SOKS5_VERSION;
-						ver_ret.METHOD = 0x02;
-						session->send((char*)&ver_ret, sizeof(ver_ret));
-						it->second.status = SessionData::WaitLogin;
-						return;
-					}
-				}
-				S5Msg_S2C_Verification ver_ret;
-				ver_ret.VER = SOKS5_VERSION;
-				ver_ret.METHOD = 0xff;
-				session->send((char*)&ver_ret, sizeof(ver_ret));
-			}
-		}
-		else
-		{
-			// 非法消息
 			S5Msg_S2C_Verification ver_ret;
 			ver_ret.VER = SOKS5_VERSION;
 			ver_ret.METHOD = 0xff;
 			session->send((char*)&ver_ret, sizeof(ver_ret));
+			return;
 		}
+		S5Msg_C2S_Verification ver_data;
+		memset(&ver_data, 0, sizeof(ver_data));
+		ver_data.VER = data[0];
+		ver_data.NMETHODS = data[1];
+
+		for (int32_t i = 0; i < ver_data.NMETHODS; ++i)
+			ver_data.METHODS[i] = data[i + 2];
+
+		if (ver_data.VER != SOKS5_VERSION)
+		{
+			S5Msg_S2C_Verification ver_ret;
+			ver_ret.VER = SOKS5_VERSION;
+			ver_ret.METHOD = 0xff;
+			session->send((char*)&ver_ret, sizeof(ver_ret));
+			printf("no support socket%d\n", ver_data.VER);
+			return;
+		}
+
+		for (int32_t i = 0; i < ver_data.NMETHODS; ++i)
+		{
+			if (ver_data.METHODS[i] == 0x0)
+			{
+				if (m_username.empty() && m_password.empty())
+				{
+					S5Msg_S2C_Verification ver_ret;
+					ver_ret.VER = SOKS5_VERSION;
+					ver_ret.METHOD = 0x00;
+					session->send((char*)&ver_ret, sizeof(ver_ret));
+					it->second.status = SessionData::Request;
+					return;
+				}
+			}
+			else if (ver_data.METHODS[i] == 0x02)
+			{
+				S5Msg_S2C_Verification ver_ret;
+				ver_ret.VER = SOKS5_VERSION;
+				ver_ret.METHOD = 0x02;
+				session->send((char*)&ver_ret, sizeof(ver_ret));
+				it->second.status = SessionData::WaitLogin;
+				return;
+			}
+		}
+		S5Msg_S2C_Verification ver_ret;
+		ver_ret.VER = SOKS5_VERSION;
+		ver_ret.METHOD = 0xff;
+		session->send((char*)&ver_ret, sizeof(ver_ret));
 	}break;
 	case SessionData::WaitLogin:
 	{
@@ -288,9 +279,13 @@ void ProxyClient::on_tcp_ServerRecvCall(Server* svr, Session* session, char* dat
 		if (data[2] != 0x0)
 			validRequest = false;
 
-		Utils::NetAddr netAddr;
-		if (validRequest && !Utils::decodeNetAddr(data + 3, len - 3, netAddr))
-			validRequest = false;
+		S5AddrInfo netInfo;
+		if (validRequest)
+		{
+			auto addrLen = MsgHelper::resolvAddr(&netInfo, (uint8_t*)data + 3);
+			if (addrLen != len - 3)
+				validRequest = false;
+		}
 
 		if (validRequest)
 		{
@@ -301,15 +296,19 @@ void ProxyClient::on_tcp_ServerRecvCall(Server* svr, Session* session, char* dat
 			req_data.CMD = data[1];
 			req_data.RSV = data[2];
 			req_data.ATYP = data[3];
-			if(req_data.CMD == SOKS5_CMD_UDP)
+			if (req_data.CMD == SOKS5_CMD_UDP)
 				memcpy(req_data.DST_ADDR, session->getIp().c_str(), session->getIp().length());
 			else
-				memcpy(req_data.DST_ADDR, netAddr.ADDR.c_str(), netAddr.ADDR.length());
-			req_data.DST_PORT = netAddr.PORT;
+				strcpy((char*)req_data.DST_ADDR, netInfo.ADDR);
+			req_data.DST_PORT = netInfo.PORT;
+
+			// alloc buf
+			auto pbuf = (Buffer*)fc_malloc(sizeof(Buffer));
+			new(pbuf) Buffer(RECV_BUFFER_BLOCK_SIZE);
 
 			it->second.request = req_data;
 			it->second.status = SessionData::WaitRequest;
-			it->second.buf = new Buffer(16 * 1024);
+			it->second.buf = pbuf;
 			m_pipe->connect(m_remoteIP.c_str(), m_remotePort, session->getSessionID());
 		}
 		else
@@ -331,27 +330,15 @@ void ProxyClient::on_tcp_ServerRecvCall(Server* svr, Session* session, char* dat
 			return;
 		}
 
-		uint32_t sendLen = sizeof(MSG_P_TCP_Data) + encodeLen;
-		resizeSendBuffer(sendLen);
+		MsgHelper::initMsg(&m_sendMsg, PIPEMSG_TYPE::SEND_TCP_DATA);
 
-		MSG_P_TCP_Data* msg = (MSG_P_TCP_Data*)m_sendBuffer;
-		msg->msgType = PIPEMSG_TYPE::SEND_TCP_DATA;
-		msg->len = sendLen;
-		msg->method = m_cypher->getMethod();
-		memcpy(msg + 1, encodeData, encodeLen);
+		m_sendMsg.common_tcp_data.METHOD = m_cypher->getMethod();
+		m_sendMsg.common_tcp_data.DATA = (uint8_t*)encodeData;
+		m_sendMsg.common_tcp_data.LEN = encodeLen;
 
-		char* sendData = m_sendBuffer;
-		do
-		{
-			if (sendLen <= BLOCK_DATA_SIZE)
-			{
-				m_pipe->send(session->getSessionID(), sendData, sendLen);
-				break;
-			}
-			m_pipe->send(session->getSessionID(), sendData, BLOCK_DATA_SIZE);
-			sendData += BLOCK_DATA_SIZE;
-			sendLen -= BLOCK_DATA_SIZE;
-		} while (1);
+		this->sendToPipe(session->getSessionID(), m_sendBuffer, MsgHelper::serializeMsg(&m_sendMsg, m_sendBuffer));
+		m_sendMsg.common_tcp_data.DATA = NULL;
+		MsgHelper::destroyMsg(&m_sendMsg);
 	}break;
 	default:
 		break;
@@ -381,102 +368,79 @@ void ProxyClient::on_pipeRecvCallback(Client*, Session* session, char* data, uin
 	auto recvBuf = it->second.buf;
 	recvBuf->add(data, len);
 
-	while (recvBuf->getDataLength() >= sizeof(MSG_P_Base))
+	while (recvBuf->getDataLength() > 0)
 	{
-		MSG_P_Base* msg = (MSG_P_Base*)recvBuf->getHeadBlockData();
-		switch(msg->msgType)
+		if(MsgHelper::checkClientMsg((uint8_t*)recvBuf->getHeadBlockData()) == false)
+			goto error_disconnect;
+
+		uint32_t totalLen = recvBuf->getDataLength();
+		uint32_t headSize = totalLen;
+		if (headSize > recvBuf->getBlockSize())
+			headSize = recvBuf->getBlockSize();
+
+		MsgHelper::initMsg(&m_recvMsg, PIPEMSG_TYPE::INVALID);
+		int32_t msgLen = MsgHelper::deserializeMsg((uint8_t*)recvBuf->getHeadBlockData(), headSize, &m_recvMsg);
+		// invalid msg
+		if (msgLen < 0)
 		{
-			case S2C_REQUEST:
+			goto error_disconnect;
+		}
+		// wait msg
+		else if (msgLen == 0)
+		{
+			if (headSize < totalLen)
 			{
-				if(recvBuf->getDataLength() < sizeof(MSG_P_S2C_Response))
-					return;
-				this->on_pipeRecvMsgCallback(session, recvBuf->getHeadBlockData(), sizeof(MSG_P_S2C_Response));
-				recvBuf->pop(NULL, sizeof(MSG_P_S2C_Response));
-			}break;
-			case SEND_TCP_DATA:
-			{
-				if(recvBuf->getDataLength() < sizeof(MSG_P_TCP_Data))
-					return;
+				resizeRecvBuffer(totalLen);
+				recvBuf->pop(m_recvBuffer, totalLen);
 
-				MSG_P_TCP_Data* dataMsg = (MSG_P_TCP_Data*)msg;
-
-				if (dataMsg->len > MSG_MAX_SIZE || dataMsg->len <= sizeof(MSG_P_TCP_Data))
+				MsgHelper::initMsg(&m_recvMsg, PIPEMSG_TYPE::INVALID);
+				msgLen = MsgHelper::deserializeMsg((uint8_t*)m_recvBuffer, totalLen, &m_recvMsg);
+				// invalid msg
+				if (msgLen < 0)
 					goto error_disconnect;
-
-				if (dataMsg->method <= EncryMethod::BEGIN || dataMsg->method >= EncryMethod::END)
-					goto error_disconnect;
-
-				if(recvBuf->getDataLength() < dataMsg->len)
-					return;
-
-				resizeRecvBuffer(dataMsg->len);
-				recvBuf->pop(m_recvBuffer, dataMsg->len);
-
-				dataMsg = (MSG_P_TCP_Data*)m_recvBuffer;
-				this->on_pipeRecvMsgCallback(session, m_recvBuffer, dataMsg->len);
-			}break;
-			case S2C_DISCONNECT:
+				// wait msg
+				else if (msgLen == 0)
+				{
+					recvBuf->add(m_recvBuffer, totalLen);
+					break;
+				}
+				else
+				{
+					this->on_pipeRecvMsg(session, m_recvMsg);
+					if (totalLen > msgLen)
+						recvBuf->add(m_recvBuffer + msgLen, totalLen - msgLen);
+				}
+			}
+			else
 			{
-				this->on_pipeRecvMsgCallback(session, recvBuf->getHeadBlockData(), sizeof(MSG_P_Base));
-				recvBuf->pop(NULL, sizeof(MSG_P_Base));
-			}break;
-			case S2C_UDP_DATA:
-			{
-				if (recvBuf->getDataLength() < sizeof(MSG_P_S2C_UDP_Data))
-					return;
-
-				MSG_P_S2C_UDP_Data* dataMsg = (MSG_P_S2C_UDP_Data*)msg;
-
-				if (dataMsg->len > MSG_MAX_SIZE || dataMsg->len <= sizeof(MSG_P_S2C_UDP_Data))
-					goto error_disconnect;
-
-				if (dataMsg->method <= EncryMethod::BEGIN || dataMsg->method >= EncryMethod::END)
-					goto error_disconnect;
-
-				if (recvBuf->getDataLength() < dataMsg->len)
-					return;
-
-				resizeRecvBuffer(dataMsg->len);
-				recvBuf->pop(m_recvBuffer, dataMsg->len);
-
-				dataMsg = (MSG_P_S2C_UDP_Data*)m_recvBuffer;
-				this->on_pipeRecvMsgCallback(session, m_recvBuffer, dataMsg->len);
-			}break;;
-			case S2C_CANNOT_RESOLVE_ADDR:
-			{
-				this->on_pipeRecvMsgCallback(session, recvBuf->getHeadBlockData(), sizeof(MSG_P_Base));
-				recvBuf->pop(NULL, sizeof(MSG_P_Base));
-			}break;
-			default:
-			{
-				printf("unknown msg:%d\n", msg->msgType);
-				recvBuf->clear();
-				goto error_disconnect;
+				break;
 			}
 		}
+		else
+		{
+			this->on_pipeRecvMsg(session, m_recvMsg);
+			recvBuf->pop(NULL, msgLen);
+		}
+		MsgHelper::destroyMsg(&m_recvMsg);
 	}
-	return;
 
+	return;
 error_disconnect:
 	m_tcpSvr->disconnect(session->getSessionID());
 	m_pipe->disconnect(session->getSessionID());
 }
 
-void ProxyClient::on_pipeRecvMsgCallback(Session* session, char* data, uint32_t len)
+void ProxyClient::on_pipeRecvMsg(Session* session, PipeMsg& msg)
 {
-	MSG_P_Base* msg = (MSG_P_Base*)data;
-	switch (msg->msgType)
+	switch (msg.type)
 	{
-	case S2C_REQUEST:
+	case S2C_RESPONSE:
 	{
-		MSG_P_S2C_Response* response = (MSG_P_S2C_Response*)data;
 		auto it = m_sessionDataMap.find(session->getSessionID());
-
 		if (it == m_sessionDataMap.end() || it->second.status != SessionData::WaitRequest)
 			goto error_disconnect;
 
-		// 0x01: tcp connect succeeded
-		if (response->ret == 0x01)
+		if (msg.s2c_response.CODE == S2C_RESPONSE_CODE::TCP_SUC)
 		{
 			if (it->second.request.CMD != SOKS5_CMD_CONNECT)
 				goto error_disconnect;
@@ -486,9 +450,7 @@ void ProxyClient::on_pipeRecvMsgCallback(Session* session, char* data, uint32_t 
 			char buf[] = { 0x05, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
 			m_tcpSvr->send(it->first, buf, sizeof(buf));
 		}
-		// 0x00: tcp connect failed
-		// 0x02: tcp connect timed out
-		else if(response->ret == 0x00 || response->ret == 0x02)
+		else if (msg.s2c_response.CODE == S2C_RESPONSE_CODE::TCP_FAIL || msg.s2c_response.CODE == S2C_RESPONSE_CODE::TCP_TIME_OUT)
 		{
 			// S5Msg_S2C_Response
 			// 0x04主机不可达
@@ -496,57 +458,56 @@ void ProxyClient::on_pipeRecvMsgCallback(Session* session, char* data, uint32_t 
 			m_tcpSvr->send(it->first, buf, sizeof(buf));
 			m_pipe->disconnect(session->getSessionID());
 		}
-		// 0x03: udp ok
-		else if(response->ret == 0x03)
+		else if (msg.s2c_response.CODE == S2C_RESPONSE_CODE::UDP_SUC)
 		{
 			if (it->second.request.CMD != SOKS5_CMD_UDP)
 				goto error_disconnect;
 
-			if(uv_ip4_addr((char*)it->second.request.DST_ADDR, it->second.request.DST_PORT, &it->second.send_addr) != 0)
+			if (uv_ip4_addr((char*)it->second.request.DST_ADDR, it->second.request.DST_PORT, &it->second.send_addr) != 0)
 			{
-				goto error_disconnect;				
+				goto error_disconnect;
 			}
 
-			auto udp = new UDPSocket(m_loop.ptr());
+			auto udp = (UDPSocket*)fc_malloc(sizeof(UDPSocket));
+			new(udp) UDPSocket(m_loop.ptr());
 			if (udp->bind("0.0.0.0", 0) == false || udp->listen(0) == false)
 			{
-				delete udp;
+				udp->~UDPSocket();
+				fc_free(udp);
 				goto error_disconnect;
 			}
 
 			auto sessionID = it->first;
 			udp->setReadCallback([=](uv_udp_t* handle, ssize_t nread, const uv_buf_t* buf, const struct sockaddr* addr, unsigned flags)
 			{
-				uint32_t encodeLen;
-				char* encodeData = m_cypher->encode(buf->base, nread, encodeLen);
-				if (encodeData == NULL)
-				{
-					m_tcpSvr->disconnect(sessionID);
-					m_pipe->disconnect(sessionID);
-					return;
-				}
-
-				uint32_t sendLen = sizeof(MSG_P_C2S_UDP_Data) + encodeLen;
-				resizeSendBuffer(sendLen);
-
-				MSG_P_C2S_UDP_Data* msg = (MSG_P_C2S_UDP_Data*)m_sendBuffer;
-				msg->msgType = PIPEMSG_TYPE::C2S_UDP_DATA;
-				msg->len = sendLen;
-				msg->method = m_cypher->getMethod();
-				memcpy(msg + 1, encodeData, encodeLen);
-
-				char* sendData = m_sendBuffer;
 				do
 				{
-					if (sendLen <= BLOCK_DATA_SIZE)
-					{
-						m_pipe->send(session->getSessionID(), sendData, sendLen);
+					if (nread < 11)
 						break;
-					}
-					m_pipe->send(session->getSessionID(), sendData, BLOCK_DATA_SIZE);
-					sendData += BLOCK_DATA_SIZE;
-					sendLen -= BLOCK_DATA_SIZE;
-				} while (1);
+
+					MsgHelper::initMsg(&m_sendMsg, PIPEMSG_TYPE::C2S_UDP_DATA);
+
+					auto addrLen = MsgHelper::resolvAddr(&m_sendMsg.common_udp_data.ADDR, (uint8_t*)&buf->base[3]);
+					if (addrLen <= 0)
+						break;
+
+					uint32_t encodeLen;
+					char* encodeData = m_cypher->encode(buf->base + addrLen + 3, nread - addrLen - 3, encodeLen);
+					if (encodeData == NULL)
+						break;
+
+					m_sendMsg.common_udp_data.METHOD = m_cypher->getMethod();
+					m_sendMsg.common_udp_data.DATA = (uint8_t*)encodeData;
+					m_sendMsg.common_udp_data.LEN = encodeLen;
+
+					this->sendToPipe(session->getSessionID(), m_sendBuffer, MsgHelper::serializeMsg(&m_sendMsg, m_sendBuffer));
+
+					m_sendMsg.common_udp_data.DATA = NULL;
+					MsgHelper::destroyMsg(&m_sendMsg);
+					return;
+				} while (0);
+				m_tcpSvr->disconnect(sessionID);
+				m_pipe->disconnect(sessionID);
 			});
 
 			it->second.udp = udp;
@@ -554,12 +515,10 @@ void ProxyClient::on_pipeRecvMsgCallback(Session* session, char* data, uint32_t 
 
 			// S5Msg_S2C_Response
 			char buf[] = { 0x05, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
-			uint16_t port = ::htons((uint16_t)udp->getPort());
-			memcpy(buf + 8, &port, 2);
+			writeUint16InBigEndian(buf + 8, (uint16_t)udp->getPort());
 			m_tcpSvr->send(it->first, buf, sizeof(buf));
 		}
-		// 0x04: udp fail
-		else if(response->ret == 0x04)
+		else if (msg.s2c_response.CODE == S2C_RESPONSE_CODE::UDP_FAIL)
 		{
 			// S5Msg_S2C_Response
 			// 0x08不支持的地址类型
@@ -573,15 +532,12 @@ void ProxyClient::on_pipeRecvMsgCallback(Session* session, char* data, uint32_t 
 	}break;
 	case S2C_DISCONNECT:
 	{
-		//printf("recv S2C_DISCONNECT --->\n");
 		goto error_disconnect;
 	}break;
 	case SEND_TCP_DATA:
 	{
-		MSG_P_TCP_Data* tcpMsg = (MSG_P_TCP_Data*)data;
-
 		uint32_t rawLen;
-		char* rawData = m_cypher->decode((EncryMethod)tcpMsg->method, data + sizeof(MSG_P_TCP_Data), tcpMsg->len - sizeof(MSG_P_TCP_Data), rawLen);
+		char* rawData = m_cypher->decode((EncryMethod)msg.common_tcp_data.METHOD, (char*)msg.common_tcp_data.DATA, msg.common_tcp_data.LEN, rawLen);
 		if (rawData == NULL)
 			goto error_disconnect;
 
@@ -593,50 +549,39 @@ void ProxyClient::on_pipeRecvMsgCallback(Session* session, char* data, uint32_t 
 		if (sessionData.udp == NULL)
 			goto error_disconnect;
 
-		MSG_P_S2C_UDP_Data* udpMsg = (MSG_P_S2C_UDP_Data*)data;
-
-		if (data[sizeof(MSG_P_S2C_UDP_Data)] != SOKS5_ATYP_IPV4 && data[sizeof(MSG_P_S2C_UDP_Data)] != SOKS5_ATYP_IPV6)
-			goto error_disconnect;
-
-		bool isIpv4 = data[sizeof(MSG_P_S2C_UDP_Data)] == SOKS5_ATYP_IPV4;
-
-		uint32_t addrLen = isIpv4 ? 4 : 16;
-		uint32_t headLen = sizeof(MSG_P_S2C_UDP_Data) + 1 + addrLen + 2;
-
 		uint32_t rawLen;
-		char* rawData = m_cypher->decode((EncryMethod)udpMsg->method, data + headLen, udpMsg->len - headLen, rawLen);
+		char* rawData = m_cypher->decode((EncryMethod)msg.common_udp_data.METHOD, (char*)msg.common_udp_data.DATA, msg.common_udp_data.LEN, rawLen);
 		if (rawData == NULL)
 			goto error_disconnect;
+
 		/*
 		+----+------+------+----------+----------+----------+
-
 		|RSV | FRAG | ATYP | DST.ADDR | DST.PORT |   DATA   |
-
 		+----+------+------+----------+----------+----------+
-
 		| 2  |  1   |  1   | Variable |    2     | Variable |
-
 		+----+------+------+----------+----------+----------+
 		*/
-		uint32_t sendLen = 4 + addrLen + 2 + rawLen;
-		resizeSendBuffer(sendLen);
+		m_sendBuffer[0] = 0x00;
+		m_sendBuffer[1] = 0x00;
+		m_sendBuffer[2] = 0x00;
 
-		memset(m_sendBuffer, 0, sendLen);
-		memcpy(m_sendBuffer + 3, data + sizeof(MSG_P_S2C_UDP_Data), addrLen + 3);
-		memcpy(m_sendBuffer + 4 + addrLen + 2, rawData, rawLen);
-		sessionData.udp->udpSend(m_sendBuffer, sendLen, (const struct sockaddr*)&sessionData.send_addr);
+		auto addrlen = MsgHelper::serializeAddr(&msg.common_udp_data.ADDR, m_sendBuffer + 3);
+		if(addrlen <= 0)
+			goto error_disconnect;
+
+		memcpy(m_sendBuffer + addrlen + 3, rawData, rawLen);
+		sessionData.udp->udpSend((char*)m_sendBuffer, rawLen + addrlen + 3, (const struct sockaddr*)&sessionData.send_addr);
 	}break;
 	case S2C_CANNOT_RESOLVE_ADDR:
 	{
 		goto error_disconnect;
 	}break;
 	default:
-		printf("unknown msg:%d\n", msg->msgType);
 		goto error_disconnect;
 		break;
 	}
-	return;
 
+	return;
 error_disconnect:
 	m_tcpSvr->disconnect(session->getSessionID());
 	m_pipe->disconnect(session->getSessionID());
@@ -662,21 +607,16 @@ void ProxyClient::on_pipeConnectCallback(Client*, Session* session, int32_t stat
 		{
 			if (it->second.status == SessionData::WaitRequest)
 			{
-				int32_t addrLen = strlen((char*)it->second.request.DST_ADDR);
+				MsgHelper::initMsg(&m_sendMsg, PIPEMSG_TYPE::C2S_REQUEST);
 
-				resizeSendBuffer(addrLen + sizeof(MSG_P_C2S_Request));
+				m_sendMsg.c2s_request.CMD = it->second.request.CMD;
+				m_sendMsg.c2s_request.ADDR.PORT = it->second.request.DST_PORT;
+				m_sendMsg.c2s_request.ADDR.ATYP = it->second.request.ATYP;
+				strcpy(m_sendMsg.c2s_request.ADDR.ADDR, (const char*)it->second.request.DST_ADDR);
 
-				MSG_P_C2S_Request* request = (MSG_P_C2S_Request*)m_sendBuffer;
-				request->msgType = PIPEMSG_TYPE::C2S_REQUEST;
-				request->CMD  = it->second.request.CMD;
-				request->ATYP = it->second.request.ATYP;
-				request->port = it->second.request.DST_PORT;
-				request->len  = addrLen;
-				memcpy(m_sendBuffer + sizeof(MSG_P_C2S_Request), it->second.request.DST_ADDR, addrLen);
-				
-				m_pipe->send(session->getSessionID(), m_sendBuffer, addrLen + sizeof(MSG_P_C2S_Request));
+				this->sendToPipe(session->getSessionID(), m_sendBuffer, MsgHelper::serializeMsg(&m_sendMsg, m_sendBuffer));
 
-				printf("connect to : %s:%d\n", it->second.request.DST_ADDR, it->second.request.DST_PORT);
+				MsgHelper::destroyMsg(&m_sendMsg);
 			}
 			else
 			{
@@ -701,21 +641,27 @@ void ProxyClient::clear()
 {
 	for(auto& it : m_sessionDataMap)
 	{
-		if(it.second.buf)
-			delete it.second.buf;
+		if (it.second.buf)
+		{
+			it.second.buf->~Buffer();
+			fc_free(it.second.buf);
+		}
 		if (it.second.udp)
-			delete it.second.udp;
+		{
+			it.second.udp->~UDPSocket();
+			fc_free(it.second.udp);
+		}
 	}
 	m_sessionDataMap.clear();
 	m_pipe = NULL;
 	m_tcpSvr = NULL;
 	m_cypher = NULL;
 	m_runStatus = RUN_STATUS::STOP;
-	if (m_sendBuffer)
-		free(m_sendBuffer);
-	m_sendBufLen = 0;
 	if (m_recvBuffer)
-		free(m_recvBuffer);
+	{
+		fc_free(m_recvBuffer);
+		m_recvBuffer = NULL;
+	}
 	m_recvBufLen = 0;
 }
 
@@ -725,21 +671,16 @@ void ProxyClient::removeSessionData(uint32_t sessionID)
 	if (m_sessionDataMap.end() != it)
 	{
 		if (it->second.buf)
-			delete it->second.buf;
+		{
+			it->second.buf->~Buffer();
+			fc_free(it->second.buf);
+		}
 		if (it->second.udp)
-			delete it->second.udp;
+		{
+			it->second.udp->~UDPSocket();
+			fc_free(it->second.udp);
+		}
 		m_sessionDataMap.erase(it);
-	}
-}
-
-void ProxyClient::resizeSendBuffer(uint32_t len)
-{
-	if (m_sendBufLen < len)
-	{
-		m_sendBufLen = len;
-		if (m_sendBuffer)
-			free(m_sendBuffer);
-		m_sendBuffer = (char*)malloc(len);
 	}
 }
 
@@ -749,7 +690,29 @@ void ProxyClient::resizeRecvBuffer(uint32_t len)
 	{
 		m_recvBufLen = len;
 		if (m_recvBuffer)
-			free(m_recvBuffer);
-		m_recvBuffer = (char*)malloc(len);
+			fc_free(m_recvBuffer);
+		m_recvBuffer = (char*)fc_malloc(len);
 	}
+}
+
+void ProxyClient::sendToPipe(uint32_t sessionID, uint8_t* data, int32_t len)
+{
+	if (len <= 0)
+	{
+		assert(0);
+		m_pipe->disconnect(sessionID);
+		return;
+	}
+
+	do
+	{
+		if (len <= BLOCK_DATA_SIZE)
+		{
+			m_pipe->send(sessionID, (char*)data, len);
+			break;
+		}
+		m_pipe->send(sessionID, (char*)data, BLOCK_DATA_SIZE);
+		data += BLOCK_DATA_SIZE;
+		len -= BLOCK_DATA_SIZE;
+	} while (1);
 }

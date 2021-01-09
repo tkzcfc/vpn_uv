@@ -35,7 +35,7 @@ protected:
 	/// pipe
 	void on_pipeRecvCallback(Client*, Session* session, char* data, uint32_t len);
 
-	void on_pipeRecvMsgCallback(Session*, char* data, uint32_t len);
+	void on_pipeRecvMsg(Session*, PipeMsg& msg);
 
 	void on_pipeDisconnectCallback(Client*, Session* session);
 
@@ -44,10 +44,10 @@ protected:
 	void clear();
 
 	void removeSessionData(uint32_t sessionID);
-
-	void resizeSendBuffer(uint32_t len);
-
+	
 	void resizeRecvBuffer(uint32_t len);
+
+	void sendToPipe(uint32_t sessionID, uint8_t* data, int32_t len);
 	
 protected:
 	std::unique_ptr<TCPServer> m_tcpSvr;
@@ -64,13 +64,16 @@ protected:
 	// socks5用户名密码
 	std::string m_username;
 	std::string m_password;
-
+	
 	// 发送缓存buffer
-	char* m_sendBuffer;
-	uint32_t m_sendBufLen;
+	uint8_t* m_sendBuffer;
 	// 接收缓存buffer
 	char* m_recvBuffer;
 	uint32_t m_recvBufLen;
+
+	PipeMsg m_recvMsg;
+	PipeMsg m_sendMsg;
+	
 	
 	std::function<void()> m_stopCall;
 	UVLoop m_loop;

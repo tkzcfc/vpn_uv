@@ -12,6 +12,7 @@ void main()
 		printf("start fail...\n");
 	}
 	delete svr;
+	printMemInfo();
 	system("pause");
 }
 

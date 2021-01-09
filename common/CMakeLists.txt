@@ -1,6 +1,7 @@
 project(common)
 
 set(LIB_COMMON_SRC
+  PipeMsg.cpp
   PipeMsg.h
   Socks5Msg.h
   utils/rc4.c
@@ -17,6 +18,8 @@ set(LIB_COMMON_SRC
   ProxyConfig.h
   ProxyServer.cpp
   ProxyServer.h
+  DnsResolver.cpp
+  DnsResolver.h
 )
 
 add_library(${PROJECT_NAME} STATIC ${LIB_COMMON_SRC})

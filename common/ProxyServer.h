@@ -3,6 +3,7 @@
 #include "Socks5Msg.h"
 #include "net_uv.h"
 #include "Cypher.h"
+#include "DnsResolver.h"
 #include <unordered_map>
 #include <memory>
 
@@ -45,21 +46,22 @@ protected:
 	
 	void on_pipeDisconnectCall(Server* svr, Session* session);
 
-	void on_pipeRecvMsgCallback(Session*, char* data, uint32_t len);
+	void on_pipeRecvMsg(Session*, PipeMsg& msg);
 
 	void clear();
 
 	void removeSessionData(uint32_t sessionID);
-
-	void resizeSendBuffer(uint32_t len);
-
+	
 	void resizeRecvBuffer(uint32_t len);
+
+	void sendToPipe(uint32_t sessionID, uint8_t* data, int32_t len);
 
 protected:
 
 	std::unique_ptr<TCPClient> m_client;
 	std::unique_ptr<Server> m_pipe;
 	std::unique_ptr<Cypher> m_cypher;
+	std::unique_ptr<DnsResolver> m_dnsResolver;
 
 	RUN_STATUS m_runStatus;
 	std::function<void()> m_stopCall;
@@ -69,8 +71,9 @@ protected:
 	// 定时清理无效连接
 	UVTimer m_clsTimer;
 
-	char* m_sendBuffer;
-	uint32_t m_sendBufLen;
+	PipeMsg m_recvMsg;
+	PipeMsg m_sendMsg;
+	uint8_t* m_sendBuffer;
 	char* m_recvBuffer;
 	uint32_t m_recvBufLen;
 

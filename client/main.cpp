@@ -13,6 +13,8 @@ void main()
 		printf("start fail...\n");
 	}
 	delete client;
+
+	printMemInfo();
 	system("pause");
 }
 
