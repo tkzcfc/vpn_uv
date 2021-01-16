@@ -370,7 +370,7 @@ void ProxyServer::on_pipeRecvMsg(Session* session, PipeMsg& msg)
 				auto sessionID = session->getSessionID();
 				m_dnsResolver->resolve(msg.c2s_request.ADDR.ADDR, [=](const char* ipaddr) 
 				{
-					if (ipaddr == NULL)
+					if (ipaddr == NULL || strlen(ipaddr) <= 0)
 					{
 						MsgHelper::initMsg(&m_sendMsg, PIPEMSG_TYPE::S2C_RESPONSE);
 						m_sendMsg.s2c_response.CODE = S2C_RESPONSE_CODE::TCP_FAIL;
