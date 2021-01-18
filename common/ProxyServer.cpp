@@ -232,8 +232,8 @@ void ProxyServer::on_pipeRecvCall(Server* svr, Session* session, char* data, uin
 
 		uint32_t totalLen = recvBuf->getDataLength();
 		uint32_t headSize = totalLen;
-		if (headSize > recvBuf->getBlockSize())
-			headSize = recvBuf->getBlockSize();
+		if (headSize > recvBuf->getHeadDataLen())
+			headSize = recvBuf->getHeadDataLen();
 
 		MsgHelper::initMsg(&m_recvMsg, PIPEMSG_TYPE::INVALID);
 		int32_t msgLen = MsgHelper::deserializeMsg((uint8_t*)recvBuf->getHeadBlockData(), headSize, &m_recvMsg);
