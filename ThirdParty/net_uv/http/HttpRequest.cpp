@@ -2,62 +2,142 @@
 
 NS_NET_UV_BEGIN
 
-HttpRequest::HttpRequest()
-	: m_method(kInvalid),
-	m_version(kUnknown)
+/// string split
+static void split(const std::string& str, const std::string& delimiter, std::vector<std::string>& result)
 {
+	std::string strTmp = str;
+	size_t cutAt;
+	while ((cutAt = strTmp.find_first_of(delimiter)) != strTmp.npos)
+	{
+		if (cutAt > 0)
+		{
+			result.push_back(strTmp.substr(0, cutAt));
+		}
+		strTmp = strTmp.substr(cutAt + 1);
+	}
+
+	if (!strTmp.empty())
+	{
+		result.push_back(strTmp);
+	}
 }
 
-bool HttpRequest::setMethod(const char* start, const char* end)
+int HttpRequest::on_message_begin(http_parser* parser)
 {
-	assert(m_method == kInvalid);
-	std::string m(start, end);
-	if (m == "GET")
+	HttpRequest* self = (HttpRequest*)parser->data;
+	self->reset();
+	return 0;
+}
+
+int HttpRequest::on_headers_complete(http_parser* parser)
+{
+	HttpRequest* self = (HttpRequest*)parser->data;
+	return 0;
+}
+
+int HttpRequest::on_message_complete(http_parser* parser)
+{
+	HttpRequest* self = (HttpRequest*)parser->data;
+	self->m_ok = true;
+	self->m_curHeaderIdx = -1;
+	self->processRequestLine();
+	return 0;
+}
+
+int HttpRequest::on_url(http_parser* parser, const char* at, size_t length)
+{
+	HttpRequest* self = (HttpRequest*)parser->data;
+	self->m_url.append(at, length);
+	return 0;
+}
+
+int HttpRequest::on_header_field(http_parser* parser, const char* at, size_t length)
+{
+	HttpRequest* self = (HttpRequest*)parser->data;
+
+	if (self->m_curHeaderIdx < 0)
 	{
-		m_method = kGet;
+		self->m_curHeaderIdx = self->m_headers.size();
+
+		Pairs p;
+		self->m_headers.emplace_back(p);
 	}
-	else if (m == "POST")
+
+	self->m_headers[self->m_curHeaderIdx].field.append(at, length);
+
+	return 0;
+}
+
+int HttpRequest::on_header_value(http_parser* parser, const char* at, size_t length)
+{
+	HttpRequest* self = (HttpRequest*)parser->data;
+
+	self->m_curHeaderIdx = -1;
+	if (self->m_headers.empty())
 	{
-		m_method = kPost;
+		assert(0);
+		return 1;
 	}
-	else if (m == "HEAD")
-	{
-		m_method = kHead;
-	}
-	else if (m == "PUT")
-	{
-		m_method = kPut;
-	}
-	else if (m == "DELETE")
-	{
-		m_method = kDelete;
-	}
-	else
-	{
-		m_method = kInvalid;
-	}
-	return m_method != kInvalid;
+
+	self->m_headers.back().value.append(at, length);
+
+	return 0;
+}
+
+int HttpRequest::on_body(http_parser* parser, const char* at, size_t length)
+{
+	HttpRequest* self = (HttpRequest*)parser->data;
+	return 0;
+}
+
+
+HttpRequest::HttpRequest()
+	: m_ok(false)
+	, m_curHeaderIdx(-1)
+{
+	memset(&m_settings, 0, sizeof(m_settings));
+	m_settings.on_message_begin = on_message_begin;
+	m_settings.on_url = on_url;
+	m_settings.on_header_field = on_header_field;
+	m_settings.on_header_value = on_header_value;
+	m_settings.on_headers_complete = on_headers_complete;
+	m_settings.on_body = on_body;
+	m_settings.on_message_complete = on_message_complete;
+
+	m_parser.data = this;
+	http_parser_init(&m_parser, HTTP_REQUEST);
+}
+
+bool HttpRequest::parse(const char* data, size_t len)
+{
+	size_t nparsed = http_parser_execute(&m_parser, &m_settings, data, len);
+	return nparsed == len;
+}
+
+bool HttpRequest::ok()
+{
+	return m_ok;
 }
 
 const char* HttpRequest::methodString() const
 {
 	const char* result = "UNKNOWN";
-	switch (m_method)
+	switch (m_parser.method)
 	{
-	case kGet:
+	case http_method::HTTP_DELETE:
+		result = "DELETE";
+		break;
+	case http_method::HTTP_GET:
 		result = "GET";
 		break;
-	case kPost:
-		result = "POST";
-		break;
-	case kHead:
+	case http_method::HTTP_HEAD:
 		result = "HEAD";
 		break;
-	case kPut:
-		result = "PUT";
+	case http_method::HTTP_POST:
+		result = "POST";
 		break;
-	case kDelete:
-		result = "DELETE";
+	case http_method::HTTP_PUT:
+		result = "PUT";
 		break;
 	default:
 		break;
@@ -65,58 +145,78 @@ const char* HttpRequest::methodString() const
 	return result;
 }
 
-void HttpRequest::addHeader(const char* start, const char* colon, const char* end)
-{
-	std::string field(start, colon);
-	++colon;
-	while (colon < end && isspace(*colon))
-	{
-		++colon;
-	}
-	std::string value(colon, end);
-	while (!value.empty() && isspace(value[value.size() - 1]))
-	{
-		value.resize(value.size() - 1);
-	}
-	m_headers[field] = value;
-}
-
 std::string HttpRequest::getHeader(const std::string& field) const
 {
-	std::string result;
-	std::map<std::string, std::string>::const_iterator it = m_headers.find(field);
-	if (it != m_headers.end())
+	for (auto& it : m_headers)
 	{
-		result = it->second;
+		if (it.field == field)
+			return it.value;
 	}
-	return result;
+	return "";
 }
 
-void HttpRequest::swap(HttpRequest& that)
+std::string HttpRequest::getParam(const std::string& key, const std::string& defaultValue) const
 {
-	std::swap(m_method, that.m_method);
-	std::swap(m_version, that.m_version);
-	m_path.swap(that.m_path);
-	m_query.swap(that.m_query);
-	m_headers.swap(that.m_headers);
+	std::map<std::string, std::string>::const_iterator it = m_params.find(key);
+	if (it != m_params.end())
+	{
+		return it->second;
+	}
+	return defaultValue;
 }
 
-template <class Fn>
-void split(const char* b, const char* e, char d, Fn fn)
+void HttpRequest::reset()
 {
-	int i = 0;
-	int beg = 0;
+	m_ok = false;
 
-	while (e ? (b + i != e) : (b[i] != '\0')) {
-		if (b[i] == d) {
-			fn(&b[beg], &b[i]);
-			beg = i + 1;
+	m_url.clear();
+	m_path.clear();
+	m_query.clear();
+
+	m_curHeaderIdx = -1;
+	m_headers.clear();
+
+	m_params.clear();
+}
+
+void HttpRequest::processRequestLine()
+{
+	auto pos = m_url.find('?');
+	if (pos == std::string::npos)
+	{
+		m_path = m_url;
+	}
+	else
+	{
+		m_path = m_url.substr(0, pos);
+		m_query = m_url.substr(pos + 1);
+	}
+
+	parseQuery();
+}
+
+void HttpRequest::parseQuery()
+{
+	m_params.clear();
+
+	if (m_query.empty())
+		return;
+
+	std::vector<std::string> arrParams;
+	split(m_query, "&", arrParams);
+
+	if (arrParams.empty())
+		return;
+
+	std::vector<std::string> tmp;
+	for (auto& it : arrParams)
+	{
+		tmp.clear();
+		split(it, "=", tmp);
+		if (tmp.size() == 2)
+		{
+			m_params[tmp[0]] = tmp[1];
 		}
-		i++;
-	}
-
-	if (i) {
-		fn(&b[beg], &b[i]);
 	}
 }
 
