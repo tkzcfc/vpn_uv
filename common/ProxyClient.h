@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 
 #include "Socks5Msg.h"
 #include "net_uv.h"

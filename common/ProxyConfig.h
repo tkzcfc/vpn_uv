@@ -1,6 +1,8 @@
 #pragma once
 
 #include "net_uv.h"
+#include "rapidjson/reader.h"
+#include "rapidjson/document.h"
 
 class ProxyConfig
 {
@@ -10,9 +12,7 @@ public:
 	
 	static ProxyConfig* getInstance();
 
-	bool initWithFile(const std::string& configFile);
-	
-	bool initWithContent(const std::string& config);
+	bool initWithArgs(int argc, char** argv);
 
 	bool isInit();
 	
@@ -24,6 +24,12 @@ public:
 	
 	bool getBool(const char* key, bool defaultValue = false);
 
+private:
+
+	bool initWithFile(const std::string& configFile);
+
+	bool initWithContent(const std::string& config);
+
 protected:
 	rapidjson::Document m_document;
 	bool m_isInit;
@@ -31,7 +37,6 @@ protected:
 	static ProxyConfig* instance;
 };
 
-static const char* g_vpnConfigFile = "config.json";
 static const char* g_vpnDefaultConfig = "{"
 "\"client_listenIP\": \"0.0.0.0\","
 "\"svr_listenIP\" : \"0.0.0.0\","

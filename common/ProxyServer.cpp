@@ -169,7 +169,7 @@ void ProxyServer::on_ClientRecvCall(Client* client, Session* session, char* data
 	}
 	it->second.timestamp = uv_now(m_loop.ptr());
 
-	uint32_t encodeLen;
+	size_t encodeLen;
 	char* encodeData = m_cypher->encode(data, len, encodeLen);
 	if (encodeData == NULL)
 	{
@@ -214,10 +214,17 @@ void ProxyServer::on_pipeNewConnectCall(Server* svr, Session* session)
 
 void ProxyServer::on_pipeRecvCall(Server* svr, Session* session, char* data, uint32_t len)
 {
+	auto error_disconnect = [=](){
+		m_client->disconnect(session->getSessionID());
+		m_pipe->disconnect(session->getSessionID());
+	};
+
+
 	auto it = m_sessionDataMap.find(session->getSessionID());
 	if (it == m_sessionDataMap.end())
 	{
-		goto error_disconnect;
+		error_disconnect();
+		return;
 	}
 
 	it->second.timestamp = uv_now(m_loop.ptr());
@@ -228,7 +235,10 @@ void ProxyServer::on_pipeRecvCall(Server* svr, Session* session, char* data, uin
 	while (recvBuf->getDataLength() > 0)
 	{
 		if (MsgHelper::checkServerMsg((uint8_t*)recvBuf->getHeadBlockData()) == false)
-			goto error_disconnect;
+		{
+			error_disconnect();
+			return;
+		}
 
 		uint32_t totalLen = recvBuf->getDataLength();
 		uint32_t headSize = totalLen;
@@ -240,7 +250,8 @@ void ProxyServer::on_pipeRecvCall(Server* svr, Session* session, char* data, uin
 		// invalid msg
 		if (msgLen < 0)
 		{
-			goto error_disconnect;
+			error_disconnect();
+			return;
 		}
 		// wait msg
 		else if (msgLen == 0)
@@ -254,7 +265,10 @@ void ProxyServer::on_pipeRecvCall(Server* svr, Session* session, char* data, uin
 				msgLen = MsgHelper::deserializeMsg((uint8_t*)m_recvBuffer, totalLen, &m_recvMsg);
 				// invalid msg
 				if (msgLen < 0)
-					goto error_disconnect;
+				{
+					error_disconnect();
+					return;					
+				}
 				// wait msg
 				else if (msgLen == 0)
 				{
@@ -280,11 +294,6 @@ void ProxyServer::on_pipeRecvCall(Server* svr, Session* session, char* data, uin
 		}
 		MsgHelper::destroyMsg(&m_recvMsg);
 	}
-	return;
-
-error_disconnect:
-	m_client->disconnect(session->getSessionID());
-	m_pipe->disconnect(session->getSessionID());
 }
 
 void ProxyServer::on_pipeDisconnectCall(Server* svr, Session* session)
@@ -328,7 +337,7 @@ void ProxyServer::on_pipeRecvMsg(Session* session, PipeMsg& msg)
 					if(net_getsockAddrIPAndPort(addr, strIP, port) <= 0)
 						break;
 
-					uint32_t encodeDataLen;
+					size_t encodeDataLen;
 					char* encodeData = m_cypher->encode(buf->base, nread, encodeDataLen);
 					if (encodeData == NULL)
 						break;
@@ -390,7 +399,7 @@ void ProxyServer::on_pipeRecvMsg(Session* session, PipeMsg& msg)
 	}break;
 	case SEND_TCP_DATA:
 	{
-		uint32_t rawLen;
+		size_t rawLen;
 		char* rawData = m_cypher->decode((EncryMethod)msg.common_tcp_data.METHOD, (char*)msg.common_tcp_data.DATA, msg.common_tcp_data.LEN, rawLen);
 		if (rawData == NULL)
 			goto error_disconnect;
@@ -403,7 +412,7 @@ void ProxyServer::on_pipeRecvMsg(Session* session, PipeMsg& msg)
 		if (sessionData.udp == NULL)
 			goto error_disconnect;
 
-		uint32_t rawLen;
+		size_t rawLen;
 		char* rawData = m_cypher->decode((EncryMethod)msg.common_udp_data.METHOD, (char*)msg.common_udp_data.DATA, msg.common_udp_data.LEN, rawLen);
 		if (rawData == NULL)
 			goto error_disconnect;

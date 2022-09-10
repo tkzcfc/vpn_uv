@@ -1,5 +1,7 @@
 #include "Common.h"
 #include "Misc.h"
+#include <cstdarg>
+
 
 #if OPEN_NET_MEM_CHECK == 1
 #include "Mutex.h"

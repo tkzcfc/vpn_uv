@@ -1,19 +1,24 @@
 #include "ProxyServer.h"
-#include <iostream>
+#include "ProxyConfig.h"
 
-void main()
+int main(int argc, char** argv)
 {
+	if (!ProxyConfig::getInstance()->initWithArgs(argc, argv))
+		return -1;
+
 	net_uv::net_setLogLevel(NET_UV_L_INFO);
 	net_uv::DNSCache::getInstance()->setEnable(true);
-
-	ProxyServer* svr = new ProxyServer();
-	if (!svr->start())
 	{
-		printf("start fail...\n");
+		ProxyServer svr;
+		if (!svr.start())
+		{
+			printf("start fail...\n");
+		}
 	}
-	delete svr;
+
 	printMemInfo();
-	system("pause");
+	
+	return 0;
 }
 
 

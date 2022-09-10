@@ -8,12 +8,6 @@ ProxyConfig* ProxyConfig::getInstance()
 	if(instance == NULL)
 	{
 		instance = new ProxyConfig();
-
-		if (!instance->initWithFile(g_vpnConfigFile))
-		{
-			printf("Unable to open configuration file '%s', using the default configuration \n\n%s\n\n", g_vpnConfigFile, g_vpnDefaultConfig);
-			instance->initWithContent(g_vpnDefaultConfig);
-		}
 	}
 	return instance;
 }
@@ -21,6 +15,22 @@ ProxyConfig* ProxyConfig::getInstance()
 ProxyConfig::ProxyConfig()
 {
 	m_isInit = false;
+}
+
+bool ProxyConfig::initWithArgs(int argc, char** argv)
+{
+	if (argc > 1)
+	{
+		if (!this->initWithFile(argv[1]))
+		{
+			printf("Unable to open configuration file '%s'", argv[1]);
+			return false;
+		}
+		return true;
+	}
+
+	printf("using the default configuration \n\n%s\n\n", g_vpnDefaultConfig);
+	return this->initWithContent(g_vpnDefaultConfig);
 }
 
 bool ProxyConfig::initWithFile(const std::string& configFile)

@@ -1,7 +1,7 @@
 #include "Cypher.h"
 
 
-Cypher::Cypher(EncryMethod  method, const char* key, uint32_t keyLen)
+Cypher::Cypher(EncryMethod  method, const char* key, size_t keyLen)
 {
 	m_method = method;
 	m_cacheBuf = NULL;
@@ -32,7 +32,7 @@ Cypher::~Cypher()
 		free(m_cacheBuf);
 }
 
-void Cypher::resizeBuf(uint32_t len)
+void Cypher::resizeBuf(size_t len)
 {
 	if (m_cacheLen < len)
 	{
@@ -43,7 +43,7 @@ void Cypher::resizeBuf(uint32_t len)
 	}
 }
 
-char* Cypher::encode(char* data, uint32_t len, uint32_t& outLen)
+char* Cypher::encode(char* data, size_t len, size_t& outLen)
 {
 	outLen = 0;
 	if(len == 0)
@@ -76,7 +76,7 @@ char* Cypher::encode(char* data, uint32_t len, uint32_t& outLen)
 	return NULL;
 }
 
-char* Cypher::decode(EncryMethod method, char* data, uint32_t len, uint32_t& outLen)
+char* Cypher::decode(EncryMethod method, char* data, size_t len, size_t& outLen)
 {
 	outLen = 0;
 

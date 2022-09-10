@@ -362,7 +362,7 @@ void test_C2S_UDP_DATA_check()
 }
 
 
-void main()
+int main()
 {
 	printf("test_C2S_REQUEST ------------------------->\n");
 	test_C2S_REQUEST();
@@ -385,5 +385,7 @@ void main()
 	
 	printMemInfo();
 	//system("pause");
+
+	return 0;
 }
 
