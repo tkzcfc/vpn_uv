@@ -1,3 +1,7 @@
+
+请使用替代本项目 https://github.com/tkzcfc/npipe
+
+
 # vpn_uv
 socks5 libuv
 
